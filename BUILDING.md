@@ -33,6 +33,8 @@ USD includes a script to build itself and all required dependencies and then ins
     cd USD
     python3 build_scripts/build_usd.py --use-cxx11-abi 0 "<path to USD install>"
 
+Note for Linux: https://github.com/PixarAnimationStudios/USD/issues/1992
+
 Build Cycles pointing to this directory.
 
     cmake -B ./build -DPXR_ROOT="<path to USD install>"
