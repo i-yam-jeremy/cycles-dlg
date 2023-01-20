@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/ingydotnet/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/bitwizeshift/result.git
+	branch = master
+	commit = a97e66bc66f140132619fd5f5cdffc30127f4220
+	parent = a7af8c4ea850f16eeb8671acf00f4f5e4578de8d
+	method = merge
+	cmdver = 0.4.5
