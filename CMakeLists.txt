@@ -43,7 +43,7 @@ set(CMAKE_BUILD_TYPE_INIT "Release")
 ###########################################################################
 # Initialize project.
 
-project(Cycles)
+project(Cycles LANGUAGES CUDA CXX C)
 
 ###########################################################################
 # Macros and utilities.
