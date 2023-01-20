@@ -60,6 +60,12 @@ if(WITH_USD)
   )
 endif()
 
+if(WITH_DEMAND_LOADING_GEOMETRY)
+  list(APPEND LIB
+    DemandLoadingGeometry
+  )
+endif()
+
 cycles_external_libraries_append(LIB)
 
 # Common configuration.

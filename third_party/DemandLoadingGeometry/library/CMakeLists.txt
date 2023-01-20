@@ -1,3 +1,4 @@
+project(DemandLoadingGeometry LANGUAGES CXX CUDA VERSION 1.0)
 
 include(FindCUDAToolkit)
 set(OPTIX_INCLUDE_DIR "/usr/local/optix/include")
@@ -23,7 +24,7 @@ embed_ptx(
         DemandLoadingGeometry_ptxShaders 
     PTX_LINK_LIBRARIES
         DemandLoadingGeomtry_ptxShaders_headerDependencies
-        CUDA::cudart
+        ${CUDA_CUDA_LIBRARY}
         glm::glm
     SOURCES
         ${PTX_SOURCES})
@@ -40,9 +41,9 @@ add_library(DemandLoadingGeometry "${SOURCES}")
 target_compile_definitions(DemandLoadingGeometry PUBLIC GLM_FORCE_CUDA)
 set_property(TARGET DemandLoadingGeometry PROPERTY CUDA_SEPARABLE_COMPILATION ON)
 set_property(TARGET DemandLoadingGeometry PROPERTY CUDA_RESOLVE_DEVICE_SYMBOLS ON)
-set_property(TARGET DemandLoadingGeometry PROPERTY CUDA_ARCHITECTURES 75)
+set_property(TARGET DemandLoadingGeometry PROPERTY CUDA_ARCHITECTURES OFF)
 target_link_libraries(DemandLoadingGeometry PRIVATE 
-    CUDA::cudart
+    ${CUDA_CUDA_LIBRARY}
     CUDA::cuda_driver
     dl
 

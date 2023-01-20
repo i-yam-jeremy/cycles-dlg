@@ -1,4 +1,6 @@
 ## Sourced from: https://github.com/owl-project/owl/blob/master/owl/cmake/embed_ptx.cmake
+## Slightly modified
+
 ## Copyright 2021 Jefferson Amstutz
 ## SPDX-License-Identifier: Apache-2.0
 
@@ -62,7 +64,7 @@ function(embed_ptx)
   add_library(${PTX_TARGET} OBJECT)
   target_sources(${PTX_TARGET} PRIVATE ${EMBED_PTX_SOURCES})
   target_link_libraries(${PTX_TARGET} PRIVATE ${EMBED_PTX_PTX_LINK_LIBRARIES})
-  target_include_directories(${PTX_TARGET} PRIVATE ${EMBED_PTX_PTX_INCLUDE_DIRS})
+  set_property(TARGET ${PTX_TARGET} PROPERTY LINKER_LANGUAGE CUDA)
   set_property(TARGET ${PTX_TARGET} PROPERTY CUDA_PTX_COMPILATION ON)
   set_property(TARGET ${PTX_TARGET} PROPERTY CUDA_ARCHITECTURES OFF)
   target_compile_options(${PTX_TARGET} PRIVATE "-lineinfo")

@@ -608,15 +608,9 @@ endif()
 
 if(WITH_CYCLES_DEVICE_OPTIX AND WITH_CYCLES_CUDA_BINARIES)
   macro(CYCLES_OPTIX_KERNEL_ADD name input flags)
-    set(output "${CMAKE_CURRENT_BINARY_DIR}/${name}.ptx")
-
     set(cuda_flags ${flags}
-      -I "${OPTIX_INCLUDE_DIR}"
-      -I "${CMAKE_CURRENT_SOURCE_DIR}/.."
-      -I "${CMAKE_CURRENT_SOURCE_DIR}/device/cuda"
       --use_fast_math
-      -Wno-deprecated-gpu-targets
-      -o ${output})
+      -Wno-deprecated-gpu-targets)
 
     if(WITH_NANOVDB)
       set(cuda_flags ${cuda_flags}
@@ -628,26 +622,38 @@ if(WITH_CYCLES_DEVICE_OPTIX AND WITH_CYCLES_CUDA_BINARIES)
       set(cuda_flags ${cuda_flags} -D WITH_CYCLES_DEBUG)
     endif()
 
-    add_custom_command(
-      OUTPUT
-        ${output}
-      DEPENDS
-        ${input}
-        ${SRC_KERNEL_HEADERS}
-        ${SRC_KERNEL_DEVICE_GPU_HEADERS}
-        ${SRC_KERNEL_DEVICE_CUDA_HEADERS}
-        ${SRC_KERNEL_DEVICE_OPTIX_HEADERS}
-        ${SRC_UTIL_HEADERS}
-      COMMAND
-        ${CUDA_NVCC_EXECUTABLE}
-        --ptx
-        -arch=sm_50
-        ${cuda_flags}
-        ${input}
-      WORKING_DIRECTORY
-        "${CMAKE_CURRENT_SOURCE_DIR}")
+    add_library(${name} OBJECT)
+    target_sources(${name} PRIVATE ${input})
+    # target_link_libraries(${name} PRIVATE ${EMBED_PTX_PTX_LINK_LIBRARIES})
+    target_compile_options(${name} PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:${cuda_flags})
+    target_include_directories(${name} PRIVATE 
+      "${OPTIX_INCLUDE_DIR}"
+      "${CMAKE_CURRENT_SOURCE_DIR}/.."
+      "${CMAKE_CURRENT_SOURCE_DIR}/device/cuda")
+    # set_property(TARGET ${name} PROPERTY LINKER_LANGUAGE CUDA)
+    set_property(TARGET ${name} PROPERTY CUDA_PTX_COMPILATION ON)
+    set_property(TARGET ${name} PROPERTY CUDA_ARCHITECTURES OFF)
 
-    list(APPEND optix_ptx ${output})
+    # add_custom_command(
+    #   OUTPUT
+    #     ${output}
+    #   DEPENDS
+    #     ${input}
+    #     ${SRC_KERNEL_HEADERS}
+    #     ${SRC_KERNEL_DEVICE_GPU_HEADERS}
+    #     ${SRC_KERNEL_DEVICE_CUDA_HEADERS}
+    #     ${SRC_KERNEL_DEVICE_OPTIX_HEADERS}
+    #     ${SRC_UTIL_HEADERS}
+    #   COMMAND
+    #     ${CUDA_NVCC_EXECUTABLE}
+    #     --ptx
+    #     -arch=sm_75
+    #     ${cuda_flags}
+    #     ${input}
+    #   WORKING_DIRECTORY
+    #     "${CMAKE_CURRENT_SOURCE_DIR}")
+
+    list(APPEND optix_ptx "$<TARGET_OBJECTS:${name}>")
 
     delayed_install("${CMAKE_CURRENT_BINARY_DIR}" "${output}" ${CYCLES_INSTALL_PATH}/lib)
   endmacro()
@@ -659,7 +665,7 @@ if(WITH_CYCLES_DEVICE_OPTIX AND WITH_CYCLES_CUDA_BINARIES)
   cycles_optix_kernel_add(
     kernel_optix_shader_raytrace
     "device/optix/kernel_shader_raytrace.cu"
-    "--keep-device-functions")
+   "") # "--keep-device-functions")
 
   add_custom_target(cycles_kernel_optix ALL DEPENDS ${optix_ptx})
   cycles_set_solution_folder(cycles_kernel_optix)

@@ -7,8 +7,7 @@ file(GLOB_RECURSE SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cu")
 add_library(device_memory_wrapper "${SOURCES}")
 target_link_libraries(device_memory_wrapper PUBLIC 
-    CUDA::cudart
-    CUDA::curand
+    ${CUDA_CUDA_LIBRARY}
     rmm::rmm
     cuda_check_macros
 )
