@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/ingydotnet/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/i-yam-jeremy/demand-loading-geometry.git
+	branch = main
+	commit = 48ab711954d59abfee70054ed98909e49e7a7512
+	parent = 454615808c12aabd5aa6c75e0ca1cb7318adbab2
+	method = merge
+	cmdver = 0.4.5
