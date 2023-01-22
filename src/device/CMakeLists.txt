@@ -218,6 +218,12 @@ if(WITH_OPENIMAGEDENOISE)
   )
 endif()
 
+if(WITH_DEMAND_LOADING_GEOMETRY)
+  list(APPEND LIB
+    DemandLoadingGeometry
+  )
+endif()
+
 include_directories(${INC})
 include_directories(SYSTEM ${INC_SYS})
 

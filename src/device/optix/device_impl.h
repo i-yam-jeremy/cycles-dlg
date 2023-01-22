@@ -12,6 +12,9 @@
 #  include "kernel/types.h"
 #  include "util/unique_ptr.h"
 
+#include <memory>
+#include <DemandLoadingGeometry.hpp>
+
 CCL_NAMESPACE_BEGIN
 
 class BVHOptiX;
@@ -50,12 +53,13 @@ static const int NUM_CALLABLE_PROGRAM_GROUPS = 2;
 enum { PIP_SHADE_RAYTRACE, PIP_SHADE_MNEE, PIP_INTERSECT, NUM_PIPELINES };
 
 /* A single shader binding table entry. */
-struct SbtRecord {
-  char header[OPTIX_SBT_RECORD_HEADER_SIZE];
-};
+struct Empty{};
+using SbtRecord = demandLoadingGeometry::SBTRecord<Empty>;
 
 class OptiXDevice : public CUDADevice {
  public:
+  std::shared_ptr<demandLoadingGeometry::GeometryDemandLoader> m_geoDemandLoader = nullptr;
+
   OptixDeviceContext context = NULL;
 
   OptixModule optix_module = NULL; /* All necessary OptiX kernels are in one module. */
