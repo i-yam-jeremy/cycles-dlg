@@ -16,13 +16,6 @@ using namespace glow::memory;
 
 extern "C" const char EMBEDDED_PTX[];
 
-static void context_log_cb(unsigned int level, const char *tag, const char *message, void * /*cbdata */) {
-  // #ifdef DEBUG
-  std::cerr << "[" << std::setw(2) << level << "][" << std::setw(12) << tag << "]: "
-            << message << "\n";
-  // #endif
-}
-
 glow::optix::OptixManager::OptixManager(const std::shared_ptr<glow::optix::OptixConnector> optix, OptixDeviceContext context)
     : optix(optix), context(context), log(std::vector<char>(2048)) {}
 
@@ -120,8 +113,8 @@ result<std::shared_ptr<glow::optix::ASData>, Err> glow::optix::OptixManager::bui
   std::vector<OptixBuildInput> inputs(mesh.buildInputs.size());
   memset(inputs.data(), 0, sizeof(OptixBuildInput) * inputs.size());
   std::vector<std::vector<CUdeviceptr>> pointBufferPointers;
-  std::vector<std::shared_ptr<glow::memory::DevicePtr<glm::vec3>>> pointsBuffers;
-  std::vector<std::shared_ptr<glow::memory::DevicePtr<glm::ivec3>>> indexBuffers;
+  std::vector<std::shared_ptr<glow::memory::DevicePtr<float3>>> pointsBuffers;
+  std::vector<std::shared_ptr<glow::memory::DevicePtr<uint3>>> indexBuffers;
   uint32_t triangleInputFlags[] = {OPTIX_GEOMETRY_FLAG_NONE};
   size_t primCount = 0;
   size_t i = 0;
@@ -130,11 +123,11 @@ result<std::shared_ptr<glow::optix::ASData>, Err> glow::optix::OptixManager::bui
 
     input.type = OPTIX_BUILD_INPUT_TYPE_TRIANGLES;
 
-    auto pointsBuffer = std::make_shared<glow::memory::DevicePtr<glm::vec3>>(buildInput->positions.size() * sizeof(glm::vec3), stream);
+    auto pointsBuffer = std::make_shared<glow::memory::DevicePtr<float3>>(buildInput->positions.size() * sizeof(glm::vec3), stream);
     pointsBuffer->write(buildInput->positions.data());
     pointBufferPointers.push_back({pointsBuffer->rawOptixPtr()});
 
-    auto indicesBuffer = std::make_shared<glow::memory::DevicePtr<glm::ivec3>>(buildInput->indices.size() * sizeof(glm::ivec3), stream);
+    auto indicesBuffer = std::make_shared<glow::memory::DevicePtr<uint3>>(buildInput->indices.size() * sizeof(glm::ivec3), stream);
     indicesBuffer->write(buildInput->indices.data());
 
     input.triangleArray.vertexFormat = OPTIX_VERTEX_FORMAT_FLOAT3;

@@ -232,6 +232,8 @@ string CUDADevice::compile_kernel_get_common_cflags(const uint kernel_features)
   return cflags;
 }
 
+constexpr char KERNEL_DIRECTORY[] = "../src/kernel";
+
 string CUDADevice::compile_kernel(const string &common_cflags,
                                   const char *name,
                                   const char *base,
@@ -245,7 +247,8 @@ string CUDADevice::compile_kernel(const string &common_cflags,
   /* Attempt to use kernel provided with Blender. */
   if (!use_adaptive_compilation()) {
     if (!force_ptx) {
-      const string cubin = path_get(string_printf("../src/kernel/%s_sm_%d%d.cubin", name, major, minor));
+      const string cubin = path_get(
+          string_printf("%s/%s_sm_%d%d.cubin", KERNEL_DIRECTORY, name, major, minor));
       printf("Test: %s\n", cubin.c_str());
       VLOG_INFO << "Testing for pre-compiled kernel " << cubin << ".";
       if (path_exists(cubin)) {
@@ -258,7 +261,7 @@ string CUDADevice::compile_kernel(const string &common_cflags,
     int ptx_major = major, ptx_minor = minor;
     while (ptx_major >= 3) {
       const string ptx = path_get(
-          string_printf("../src/kernel/%s_compute_%d%d.ptx", name, ptx_major, ptx_minor));
+          string_printf("%s/%s_compute_%d%d.ptx", KERNEL_DIRECTORY, name, ptx_major, ptx_minor));
       printf("Test: %s\n", ptx.c_str());
       VLOG_INFO << "Testing for pre-compiled kernel " << ptx << ".";
       if (path_exists(ptx)) {

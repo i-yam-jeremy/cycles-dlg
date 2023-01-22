@@ -1,6 +1,6 @@
 #pragma once
 
-#include <glm/glm.hpp>
+#include <cuda_runtime.h>
 #include <iostream>
 #include <memory>
 #include <optix.h>
@@ -11,8 +11,8 @@ namespace demandLoadingGeometry {
 struct TriangleBuildInput {
   TriangleBuildInput() {}
 
-  std::vector<glm::vec3> positions;
-  std::vector<glm::ivec3> indices;
+  std::vector<float3> positions;
+  std::vector<uint3> indices;
 };
 
 struct Mesh {

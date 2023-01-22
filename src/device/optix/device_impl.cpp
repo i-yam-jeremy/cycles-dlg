@@ -261,25 +261,26 @@ OptiXDevice::OptiXDevice(const DeviceInfo &info, Stats &stats, Profiler &profile
 
   /* Create OptiX context for this device. */
   OptixDeviceContextOptions options = {};
-#  ifdef WITH_CYCLES_LOGGING
+  // #  ifdef WITH_CYCLES_LOGGING
   options.logCallbackLevel = 4; /* Fatal = 1, Error = 2, Warning = 3, Print = 4. */
   options.logCallbackFunction = [](unsigned int level, const char *, const char *message, void *) {
-    switch (level) {
-      case 1:
-        LOG_IF(FATAL, VLOG_IS_ON(1)) << message;
-        break;
-      case 2:
-        LOG_IF(ERROR, VLOG_IS_ON(1)) << message;
-        break;
-      case 3:
-        LOG_IF(WARNING, VLOG_IS_ON(1)) << message;
-        break;
-      case 4:
-        LOG_IF(INFO, VLOG_IS_ON(1)) << message;
-        break;
-    }
+    // switch (level) {
+    //   case 1:
+    //     LOG_IF(FATAL, VLOG_IS_ON(1)) << message;
+    //     break;
+    //   case 2:
+    //     LOG_IF(ERROR, VLOG_IS_ON(1)) << message;
+    //     break;
+    //   case 3:
+    //     LOG_IF(WARNING, VLOG_IS_ON(1)) << message;
+    //     break;
+    //   case 4:
+    //     LOG_IF(INFO, VLOG_IS_ON(1)) << message;
+    //     break;
+    // }
+    std::cout << message << std::endl;
   };
-#  endif
+  // #  endif
   if (DebugFlags().optix.use_debug) {
     VLOG_INFO << "Using OptiX debug mode.";
     options.validationMode = OPTIX_DEVICE_CONTEXT_VALIDATION_MODE_ALL;

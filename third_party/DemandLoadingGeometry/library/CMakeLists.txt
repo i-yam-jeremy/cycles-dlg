@@ -1,4 +1,5 @@
 project(DemandLoadingGeometry LANGUAGES CXX CUDA VERSION 1.0)
+set(CMAKE_CXX_STANDARD 20)
 
 include(FindCUDAToolkit)
 set(OPTIX_INCLUDE_DIR "/usr/local/optix/include")
@@ -51,13 +52,13 @@ target_link_libraries(DemandLoadingGeometry PRIVATE
 
     DemandLoadingGeometry_ptxShaders
 
-    glm::glm
-
     cuda_check_macros
     device_memory_wrapper
     result_type
 )
-target_link_libraries(DemandLoadingGeometry PUBLIC     glm)
+target_link_libraries(DemandLoadingGeometry PUBLIC
+    glm::glm
+)
 target_include_directories(DemandLoadingGeometry PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
 )

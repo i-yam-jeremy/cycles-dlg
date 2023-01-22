@@ -612,24 +612,28 @@ if(WITH_CYCLES_DEVICE_OPTIX AND WITH_CYCLES_CUDA_BINARIES)
       --use_fast_math
       -Wno-deprecated-gpu-targets)
 
-    if(WITH_NANOVDB)
-      set(cuda_flags ${cuda_flags}
-        -D WITH_NANOVDB
-        -I "${NANOVDB_INCLUDE_DIR}")
-    endif()
+    # if(WITH_NANOVDB)
+    #   set(cuda_flags ${cuda_flags}
+    #     -DWITH_NANOVDB
+    #     -I "${NANOVDB_INCLUDE_DIR}")
+    # endif()
 
-    if(WITH_CYCLES_DEBUG)
-      set(cuda_flags ${cuda_flags} -D WITH_CYCLES_DEBUG)
-    endif()
+    # if(WITH_CYCLES_DEBUG)
+    #   set(cuda_flags ${cuda_flags} -D WITH_CYCLES_DEBUG)
+    # endif()
 
     add_library(${name} OBJECT)
+    # message(FATAL_ERROR "Input: ${input}")
     target_sources(${name} PRIVATE ${input})
     # target_link_libraries(${name} PRIVATE ${EMBED_PTX_PTX_LINK_LIBRARIES})
-    target_compile_options(${name} PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:${cuda_flags})
+    target_compile_options(${name} PRIVATE "$<$<COMPILE_LANGUAGE:CUDA>:${cuda_flags}>")
     target_include_directories(${name} PRIVATE 
       "${OPTIX_INCLUDE_DIR}"
       "${CMAKE_CURRENT_SOURCE_DIR}/.."
       "${CMAKE_CURRENT_SOURCE_DIR}/device/cuda")
+    target_link_libraries(${name} PRIVATE
+      ${CUDA_CUDA_LIBRARY})
+    target_compile_options(${name} PRIVATE "-lineinfo")
     # set_property(TARGET ${name} PROPERTY LINKER_LANGUAGE CUDA)
     set_property(TARGET ${name} PROPERTY CUDA_PTX_COMPILATION ON)
     set_property(TARGET ${name} PROPERTY CUDA_ARCHITECTURES OFF)
@@ -655,19 +659,19 @@ if(WITH_CYCLES_DEVICE_OPTIX AND WITH_CYCLES_CUDA_BINARIES)
 
     list(APPEND optix_ptx "$<TARGET_OBJECTS:${name}>")
 
-    delayed_install("${CMAKE_CURRENT_BINARY_DIR}" "${output}" ${CYCLES_INSTALL_PATH}/lib)
+    delayed_install("${CMAKE_CURRENT_BINARY_DIR}" "$<TARGET_OBJECTS:${name}>" ${CYCLES_INSTALL_PATH}/lib)
   endmacro()
 
   cycles_optix_kernel_add(
     kernel_optix
-    "device/optix/kernel.cu"
+    "${CMAKE_CURRENT_SOURCE_DIR}/device/optix/kernel.cu"
     "")
   cycles_optix_kernel_add(
     kernel_optix_shader_raytrace
-    "device/optix/kernel_shader_raytrace.cu"
-   "") # "--keep-device-functions")
+    "${CMAKE_CURRENT_SOURCE_DIR}/device/optix/kernel_shader_raytrace.cu"
+    "--keep-device-functions")
 
-  add_custom_target(cycles_kernel_optix ALL DEPENDS ${optix_ptx})
+  add_custom_target(cycles_kernel_optix ALL DEPENDS kernel_optix kernel_optix_shader_raytrace)
   cycles_set_solution_folder(cycles_kernel_optix)
 endif()
 
@@ -923,9 +927,9 @@ endif()
 
 cycles_add_library(cycles_kernel "${LIB}"
   ${SRC_KERNEL_DEVICE_CPU}
-  ${SRC_KERNEL_DEVICE_CUDA}
+  # ${SRC_KERNEL_DEVICE_CUDA}
   ${SRC_KERNEL_DEVICE_HIP}
-  ${SRC_KERNEL_DEVICE_OPTIX}
+  # ${SRC_KERNEL_DEVICE_OPTIX} # Disabling OptiX sources here so there aren't linked in as cubin objects. Dependency graph is still correct because OptiX sources are included in cycles_kernel_optix
   ${SRC_KERNEL_DEVICE_METAL}
   ${SRC_KERNEL_HEADERS}
   ${SRC_KERNEL_DEVICE_CPU_HEADERS}

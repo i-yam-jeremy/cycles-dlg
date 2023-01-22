@@ -21,7 +21,7 @@ GeometryDemandLoaderImpl::~GeometryDemandLoaderImpl() {
 
   // Write chunk metrics
   std::ofstream outChunkMetrics("chunkMetrics.csv", std::ofstream::out);
-  for (const auto chunk : m_chunkAssets) {
+  for (const auto& chunk : m_chunkAssets) {
     const auto aabb = chunk->getAABB();
     const auto &metrics = chunk->getMetrics();
     // TODO chunk xform
