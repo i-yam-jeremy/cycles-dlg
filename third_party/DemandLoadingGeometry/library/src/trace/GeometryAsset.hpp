@@ -9,7 +9,9 @@ public:
   GeometryAsset(const Mesh *mesh, int sbtOffset) : mesh(mesh), sbtOffset(sbtOffset) {}
 
   OptixAabb getAABB() const override {
-    return mesh->aabb;
+    std::cerr << "Should not be called: GeometryAsset::getAABB()\n";
+    std::exit(1);
+    return OptixAabb{};
   }
 
   glm::mat4 getChunkXform() const override {

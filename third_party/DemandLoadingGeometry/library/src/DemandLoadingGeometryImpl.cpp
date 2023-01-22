@@ -1,6 +1,6 @@
 #include "DemandLoadingGeometryImpl.hpp"
 
-#include <sharedtypes/affinexform.h>
+#include <affinexform.h>
 #include <trace/ChunkAsset.hpp>
 #include <trace/GeometryAsset.hpp>
 #include <vector>
@@ -39,31 +39,46 @@ std::optional<OptixProgramGroup> GeometryDemandLoaderImpl::getOptixProgramGroup(
   return res.value();
 }
 
+namespace {
+OptixAabb calculateMeshAabb(const Mesh& mesh) {
+  OptixAabb aabb{1e20, 1e20, 1e20, -1e20, -1e20, -1e20};
+  for (const auto &buildInput : mesh.buildInputs) {
+    for (const auto& point: buildInput->positions) {
+        aabb.minX = std::min(aabb.minX, point.x);
+        aabb.minY = std::min(aabb.minY, point.y);
+        aabb.minZ = std::min(aabb.minZ, point.z);
+        aabb.maxX = std::max(aabb.maxX, point.x);
+        aabb.maxY = std::max(aabb.maxY, point.y);
+        aabb.maxZ = std::max(aabb.maxZ, point.z);
+    }
+  }
+  return aabb;
+}
+}
+
 // Scene Building API
 // void reserveSpaceForNewInstances(size_t instanceCount);
-MeshHandle GeometryDemandLoaderImpl::addMesh(const Mesh &mesh) {
+MeshHandle GeometryDemandLoaderImpl::addMesh(const Mesh &mesh, const std::optional<OptixAabb>& aabb) {
   size_t meshIndex = m_meshes.size();
-  size_t meshMemoryUsage = 0;
+  size_t memoryUsage = 0;
   for (const auto &buildInput : mesh.buildInputs) {
-    meshMemoryUsage += buildInput->indices.size() * sizeof(buildInput->indices[0]);
-    meshMemoryUsage += buildInput->positions.size() * sizeof(buildInput->positions[0]);
-    meshMemoryUsage += (buildInput->indices.size() * 3) * sizeof(glm::vec3); // Normals
-    meshMemoryUsage += (buildInput->indices.size() * 3) * sizeof(glm::vec2); // Tex coords
+    memoryUsage += buildInput->indices.size() * sizeof(buildInput->indices[0]);
+    memoryUsage += buildInput->positions.size() * sizeof(buildInput->positions[0]);
+    memoryUsage += (buildInput->indices.size() * 3) * sizeof(glm::vec3); // Normals
+    memoryUsage += (buildInput->indices.size() * 3) * sizeof(glm::vec2); // Tex coords
   }
-  m_meshMemoryUsages[meshIndex] = meshMemoryUsage;
+  const OptixAabb meshAabb = aabb.has_value() ? aabb.value() : calculateMeshAabb(mesh);
+  m_instancePartitioner->setMeshInfo(meshIndex, meshAabb, memoryUsage);
   m_meshes.push_back(mesh);
+
   return MeshHandle(meshIndex);
 }
 
-void GeometryDemandLoaderImpl::addInstance(MeshHandle meshHandle, const OptixAabb &meshAabb, const glm::mat4 &xform) {
-  const auto meshMemoryUsage = m_meshMemoryUsages.find(meshHandle.meshIndex);
-  if (meshMemoryUsage == m_meshMemoryUsages.end()) {
-    return;
-  }
-  m_instancePartitioner->add(meshHandle.meshIndex, meshAabb, xform, meshMemoryUsage->second);
+void GeometryDemandLoaderImpl::addInstance(MeshHandle meshHandle, const AffineXform &xform) {
+  m_instancePartitioner->add(meshHandle.meshIndex, xform);
 }
 
-void GeometryDemandLoaderImpl::updateScene() {
+OptixTraversableHandle GeometryDemandLoaderImpl::updateScene() {
   for (const auto &d_rayQueue : m_stalledRayQueues) {
     CUDA_CHECK(cudaFree(d_rayQueue));
   }
@@ -89,6 +104,8 @@ void GeometryDemandLoaderImpl::updateScene() {
   CUDA_CHECK(cudaMemcpy(m_deviceContext.d_stalledRayIndices, m_stalledRayQueues.data(), m_stalledRayQueues.size() * sizeof(m_stalledRayQueues[0]), cudaMemcpyHostToDevice));
 
   CUDA_CHECK(cudaStreamSynchronize((cudaStream_t)0));
+
+  return m_deviceContext.sceneTraversableHandle;
 }
 
 void GeometryDemandLoaderImpl::partition() {

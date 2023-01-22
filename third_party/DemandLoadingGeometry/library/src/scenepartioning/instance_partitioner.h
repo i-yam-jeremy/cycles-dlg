@@ -5,6 +5,7 @@
 #include <functional>
 #include <memory>
 #include <unordered_map>
+#include <affinexform.h>
 
 namespace glow::pipeline::sceneloader::partition {
 
@@ -12,7 +13,8 @@ class InstancePartitioner {
 public:
   InstancePartitioner(const OptixAabb &sceneBounds);
   virtual ~InstancePartitioner() = default;
-  void add(int meshId, const OptixAabb &aabb, const glm::mat4 &instanceXform, const size_t memoryUsage);
+  void setMeshInfo(int meshId, const OptixAabb& aabb, const size_t memoryUsage);
+  void add(int meshId, const demandLoadingGeometry::AffineXform &instanceXform);
   int writeChunks(std::function<void(const std::shared_ptr<glow::pipeline::render::Chunk>)> callback);
 
 protected:
@@ -33,8 +35,8 @@ protected:
 
   std::function<void(const std::shared_ptr<glow::pipeline::render::Chunk>)> callback;
   std::shared_ptr<glow::pipeline::render::Chunk> rootChunk = nullptr;
-  std::unordered_map<int, OptixAabb> meshAabbs;
-  std::unordered_map<int, size_t> meshMemoryUsages;
+  std::unordered_map<int, OptixAabb> m_meshAabbs;
+  std::unordered_map<int, size_t> m_meshMemoryUsages;
   OptixAabb sceneBounds;
   int chunkCount = 0;
   std::vector<std::shared_ptr<glow::pipeline::render::Chunk>> meshChunks;

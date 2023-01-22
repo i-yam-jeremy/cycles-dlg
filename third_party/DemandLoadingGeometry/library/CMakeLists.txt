@@ -40,6 +40,7 @@ file(GLOB_RECURSE SOURCES
 list(FILTER SOURCES EXCLUDE REGEX "GeometryDeviceContext\\.cu")
 add_library(DemandLoadingGeometry "${SOURCES}")
 target_compile_definitions(DemandLoadingGeometry PUBLIC GLM_FORCE_CUDA)
+target_compile_options(DemandLoadingGeometry PRIVATE -fPIC)
 set_property(TARGET DemandLoadingGeometry PROPERTY CUDA_SEPARABLE_COMPILATION ON)
 set_property(TARGET DemandLoadingGeometry PROPERTY CUDA_RESOLVE_DEVICE_SYMBOLS ON)
 set_property(TARGET DemandLoadingGeometry PROPERTY CUDA_ARCHITECTURES OFF)

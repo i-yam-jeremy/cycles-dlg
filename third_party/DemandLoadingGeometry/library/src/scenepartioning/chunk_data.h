@@ -3,12 +3,12 @@
 #include <cuda_check_macros.h>
 #include <cuda_runtime.h>
 #include <optix.h>
-#include <sharedtypes/affinexform.h>
+#include <affinexform.h>
 
 namespace glow::pipeline::sceneloader::partition {
 struct Instance {
   int meshId;
-  AffineXform xform;
+  demandLoadingGeometry::AffineXform xform;
 };
 
 class InstanceList {

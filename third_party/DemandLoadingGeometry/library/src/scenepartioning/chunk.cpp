@@ -1,7 +1,7 @@
 #include "chunk.h"
 
-void glow::pipeline::render::Chunk::addInstance(int meshId, const glm::mat4 &instanceXform) {
-  instanceXformsByAsset[meshId].push_back(AffineXform(instanceXform));
+void glow::pipeline::render::Chunk::addInstance(int meshId, const demandLoadingGeometry::AffineXform &instanceXform) {
+  instanceXformsByAsset[meshId].push_back(instanceXform);
   instanceCount++;
 }
 
@@ -9,7 +9,7 @@ bool glow::pipeline::render::Chunk::isEmpty() const {
   return getInstanceXforms().size() == 0;
 }
 
-const std::unordered_map<int, std::vector<AffineXform>> &glow::pipeline::render::Chunk::getInstanceXforms() const {
+const std::unordered_map<int, std::vector<demandLoadingGeometry::AffineXform>> &glow::pipeline::render::Chunk::getInstanceXforms() const {
   return instanceXformsByAsset;
 }
 

@@ -2,6 +2,7 @@
 
 #include <MeshHandle.hpp>
 #include <MeshTypes.h>
+#include <affinexform.h>
 #include <cuda_runtime.h>
 #include <glm/glm.hpp>
 #include <internal/structs.hpp>
@@ -12,6 +13,7 @@
 #include <string>
 #include <tuple>
 #include <vector>
+#include <optional>
 
 // Temporary (while refactoring is in progress)
 enum class InstancePartitionerType {
@@ -93,9 +95,9 @@ public:
 
   // Scene Building API
   // void reserveSpaceForNewInstances(size_t instanceCount);
-  MeshHandle addMesh(const Mesh &mesh);
-  void addInstance(MeshHandle meshHandle, const OptixAabb &meshAabb, const glm::mat4 &xform);
-  void updateScene();
+  MeshHandle addMesh(const Mesh &mesh, const std::optional<OptixAabb>& aabb = {});
+  void addInstance(MeshHandle meshHandle, const AffineXform &xform);
+  OptixTraversableHandle updateScene();
 
   std::unique_ptr<SBTBuffer> getInternalApiHitgroupSbtEntries(size_t sizeOfUserSbtStruct);
 

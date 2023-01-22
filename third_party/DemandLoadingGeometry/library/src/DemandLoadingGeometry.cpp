@@ -39,16 +39,16 @@ std::optional<OptixProgramGroup> GeometryDemandLoader::getOptixProgramGroup(cons
   return m_impl->getOptixProgramGroup(pipeline_compile_options, module_compile_options);
 }
 
-MeshHandle GeometryDemandLoader::addMesh(const Mesh &mesh) {
-  return m_impl->addMesh(mesh);
+MeshHandle GeometryDemandLoader::addMesh(const Mesh &mesh, const std::optional<OptixAabb>& aabb) {
+  return m_impl->addMesh(mesh, aabb);
 }
 
-void GeometryDemandLoader::addInstance(MeshHandle meshHandle, const OptixAabb &meshAabb, const glm::mat4 &xform) {
-  m_impl->addInstance(meshHandle, meshAabb, xform);
+void GeometryDemandLoader::addInstance(MeshHandle meshHandle, const AffineXform &xform) {
+  m_impl->addInstance(meshHandle, xform);
 }
 
-void GeometryDemandLoader::updateScene() {
-  m_impl->updateScene();
+OptixTraversableHandle GeometryDemandLoader::updateScene() {
+  return m_impl->updateScene();
 }
 
 std::unique_ptr<SBTBuffer> GeometryDemandLoader::getInternalApiHitgroupSbtEntries(size_t sizeOfUserSbtStruct) {

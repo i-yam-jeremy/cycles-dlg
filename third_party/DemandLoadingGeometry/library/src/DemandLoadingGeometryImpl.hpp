@@ -20,9 +20,9 @@ public:
 
   // Scene Building API
   // void reserveSpaceForNewInstances(size_t instanceCount);
-  MeshHandle addMesh(const Mesh &mesh);
-  void addInstance(MeshHandle meshHandle, const OptixAabb &meshAabb, const glm::mat4 &xform);
-  void updateScene();
+  MeshHandle addMesh(const Mesh &mesh, const std::optional<OptixAabb>& aabb);
+  void addInstance(MeshHandle meshHandle, const AffineXform &xform);
+  OptixTraversableHandle updateScene();
 
   std::unique_ptr<SBTBuffer> getInternalApiHitgroupSbtEntries(size_t sizeOfUserSbtStruct);
 
@@ -34,8 +34,7 @@ private:
   GeometryDeviceContext m_deviceContext;
   std::unique_ptr<glow::pipeline::sceneloader::partition::InstancePartitioner> m_instancePartitioner = nullptr;
   Options m_options;
-  int m_meshCount = 0;
-  std::unordered_map<int, size_t> m_meshMemoryUsages;
+
   std::vector<Mesh> m_meshes;
   std::vector<Chunk> m_chunks;
   std::shared_ptr<glow::optix::OptixManager> m_optixManager = nullptr;

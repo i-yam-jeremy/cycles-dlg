@@ -17,8 +17,6 @@ struct TriangleBuildInput {
 
 struct Mesh {
   Mesh() {}
-
-  OptixAabb aabb;
   std::vector<std::shared_ptr<TriangleBuildInput>> buildInputs;
 };
 

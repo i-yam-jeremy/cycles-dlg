@@ -36,17 +36,31 @@ OptixAabb scaleAABB(const OptixAabb &aabb, float scale) {
 }
 } // namespace
 
-void InstancePartitioner::add(int meshId, const OptixAabb &aabb, const glm::mat4 &instanceXform, const size_t memoryUsage) {
-  if (memoryUsage >= meshMemoryUsageThreshold) {
-    auto meshChunk = std::make_shared<glow::pipeline::render::Chunk>(scaleAABB(aabb, 1.), instanceXform);
+void InstancePartitioner::setMeshInfo(int meshId, const OptixAabb& aabb, const size_t memoryUsage) {
+  m_meshAabbs[meshId] = aabb;
+  m_meshMemoryUsages[meshId] = memoryUsage;
+}
+
+void InstancePartitioner::add(int meshId, const demandLoadingGeometry::AffineXform &instanceXform) {
+  const auto memoryUsage = m_meshMemoryUsages.find(meshId);
+  if (memoryUsage == m_meshMemoryUsages.end()) {
+    return;
+  }
+
+  const auto& aabb = m_meshAabbs.find(meshId);
+  if (aabb == m_meshAabbs.end()) {
+    return;
+  }
+
+
+  if (memoryUsage->second >= meshMemoryUsageThreshold) {
+    auto meshChunk = std::make_shared<glow::pipeline::render::Chunk>(scaleAABB(aabb->second, 1.), instanceXform.toMat());
     meshChunk->addInstance(meshId, instanceXform);
     meshChunks.push_back(meshChunk);
     return;
   }
 
   rootChunk->addInstance(meshId, instanceXform);
-  meshAabbs[meshId] = aabb;
-  meshMemoryUsages[meshId] = memoryUsage;
 }
 
 namespace {
@@ -122,10 +136,10 @@ void InstancePartitioner::subdivideChunk(const std::shared_ptr<glow::pipeline::r
   std::cout << "Root chunk: " << rootChunk->getInstanceCount() << std::endl;
   glow::memory::DevicePtr<char> d_temp_storage(rootChunk->getInstanceCount() /*can probably get away with lower than this much temp storage*/, stream);
   glow::memory::DevicePtr<int> d_num_selected_out(sizeof(int), stream);
-  glow::memory::DevicePtr<OptixAabb> d_meshAabbs(sizeof(OptixAabb) * meshAabbs.size(), stream);
+  glow::memory::DevicePtr<OptixAabb> d_meshAabbs(sizeof(OptixAabb) * m_meshAabbs.size(), stream);
   {
-    std::vector<OptixAabb> meshAabbVec(meshAabbs.size());
-    for (const auto &entry : meshAabbs) {
+    std::vector<OptixAabb> meshAabbVec(m_meshAabbs.size());
+    for (const auto &entry : m_meshAabbs) {
       meshAabbVec[entry.first] = entry.second;
     }
     d_meshAabbs.write(meshAabbVec.data());
@@ -203,7 +217,7 @@ void InstancePartitioner::subdivideChunk(const std::shared_ptr<glow::pipeline::r
           auto chunk = std::make_shared<glow::pipeline::render::Chunk>(subChunk->getAabb(), glm::mat4(1));
           for (size_t instanceIndex = 0; instanceIndex < subChunk->getInstances().size(); instanceIndex++) {
             const auto &instance = subChunk->getInstances()[instanceIndex];
-            chunk->addInstance(instance.meshId, instance.xform.toMat());
+            chunk->addInstance(instance.meshId, instance.xform);
           }
           callback(chunk);
           this->chunkCount++;

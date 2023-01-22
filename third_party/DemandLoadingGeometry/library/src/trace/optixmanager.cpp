@@ -59,7 +59,7 @@ result<OptixTraversableHandle, Err> glow::optix::OptixManager::createTopLevelTra
     const auto asset = topLevelAssets[i];
     auto &instanceList = instanceXforms[i];
     instanceList.assetIndex = i;
-    instanceList.instanceXforms.push_back(AffineXform(asset->getChunkXform()));
+    instanceList.instanceXforms.push_back(demandLoadingGeometry::AffineXform(asset->getChunkXform()));
   }
   UNWRAP(as, createTopLevelAS(instanceXforms, topLevelAssets, (cudaStream_t)0));
   this->topLevelAABBHandle = std::get<0>(as);
@@ -237,12 +237,12 @@ result<OptixTraversableHandle, Err> glow::optix::OptixManager::getAssetAabbAS(in
 }
 
 namespace {
-OptixInstance createInstanceForChunk(int assetIndex, OptixTraversableHandle asHandle, const AffineXform &xform) {
+OptixInstance createInstanceForChunk(int assetIndex, OptixTraversableHandle asHandle, const demandLoadingGeometry::AffineXform &xform) {
   OptixInstance instance = {};
   instance.instanceId = assetIndex;
   instance.visibilityMask = 0xFF;
   instance.flags = OPTIX_INSTANCE_FLAG_NONE;
-  memcpy(instance.transform, xform.values, sizeof(instance.transform));
+  memcpy(instance.transform, xform.data, sizeof(instance.transform));
   instance.sbtOffset = 0;
   instance.traversableHandle = asHandle;
   return instance;
@@ -297,7 +297,7 @@ result<std::tuple<OptixTraversableHandle, std::shared_ptr<glow::memory::DevicePt
       continue;
     }
 
-    glow::memory::DevicePtr<AffineXform> xforms(sizeof(instanceList.instanceXforms[0]) * instanceList.instanceXforms.size(), stream);
+    glow::memory::DevicePtr<demandLoadingGeometry::AffineXform> xforms(sizeof(instanceList.instanceXforms[0]) * instanceList.instanceXforms.size(), stream);
     xforms.write(instanceList.instanceXforms.data());
 
     populateOptixInstances(deviceInstances.rawPtr() + instanceOffset, xforms.rawPtr(), asset->getAS(), asset->getSBTOffset(), instanceList.instanceXforms.size(), stream);

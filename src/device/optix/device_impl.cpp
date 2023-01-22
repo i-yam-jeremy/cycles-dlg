@@ -1411,6 +1411,30 @@ bool OptiXDevice::denoise_run(DenoiseContext &context, const DenoisePass &pass)
   return true;
 }
 
+namespace {
+bool isDLGCompatible(Geometry::Type geomType) {
+  return geomType == Geometry::MESH;
+}
+
+size_t getNumObjectsNotCompatibleWithDLG(vector<Object *> objects) {
+  size_t objectCount = 0;
+  for (const Object* obj: objects) {
+      if (!isDLGCompatible(obj->get_geometry()->geometry_type)) {
+        objectCount++;
+      }
+  }
+  return objectCount;
+}
+}
+
+namespace {
+OptixAabb convertBoundBoxToOptixAabb(const BoundBox& bbox) {
+  return OptixAabb{
+    bbox.min.x, bbox.min.y, bbox.min.z,
+    bbox.max.x, bbox.max.y, bbox.max.z};
+}
+}
+
 bool OptiXDevice::build_optix_bvh(BVHOptiX *bvh,
                                   OptixBuildOperation operation,
                                   const OptixBuildInput &build_input,
@@ -1721,16 +1745,22 @@ void OptiXDevice::build_bvh(BVH *bvh, Progress &progress, bool refit)
         return;
       }
 
+      auto triBuildInput = std::make_shared<demandLoadingGeometry::TriangleBuildInput>();
+      triBuildInput->positions.resize(mesh->get_verts().size());
+      for (size_t i = 0; i < triBuildInput->positions.size(); i++) {
+        const auto p = mesh->get_verts()[i];
+        triBuildInput->positions[i] = {p.x, p.y, p.z};
+      }
+      triBuildInput->indices.resize(mesh->get_triangles().size() / 3);
+      static_assert(sizeof(triBuildInput->indices[0]) == 3*sizeof(mesh->get_triangles()[0]), "Index data types are not compatible.");
+      memcpy(triBuildInput->indices.data(), mesh->get_triangles().data(), triBuildInput->indices.size() * sizeof(triBuildInput->indices[0]));
+
       demandLoadingGeometry::Mesh dlgMesh;
-      dlgMesh.aabb = TODO;
-      dlgMesh.buildInputs.push_back({});
+      dlgMesh.buildInputs.push_back(triBuildInput);
 
-      demandLoadingGeometry::TriangleBuildInput& triBuildInput = dlgMesh.buildInputs[0];
-      dlgMesh.positions.reserve(mesh->get_verts().size());
-      dlgMesh.indices.reserve(mesh->get_triangles().size());
-      copyVertAndIndexDataFromMeshToDLGBuildInputBuffers(TODO);
-
-      m_meshHandles[mesh] = m_geoDemandLoader->addMesh(dlgMesh, OPTIX_GEOMETRY_FLAG_REQUIRE_SINGLE_ANYHIT_CALL);
+      OptixAabb aabb = convertBoundBoxToOptixAabb(mesh->bounds);
+      m_meshHandles[mesh] = m_geoDemandLoader->addMesh(dlgMesh, aabb);
+      // TODO(jberchtold) mesh should have this flag OPTIX_GEOMETRY_FLAG_REQUIRE_SINGLE_ANYHIT_CALL, but idk if it should because DLG should disallow anyhit because it will cause random chunk loads, where closest hit will likely make the loads more coherent
     }
     else if (geom->geometry_type == Geometry::POINTCLOUD) {
       /* Build BLAS for points primitives. */
@@ -1836,7 +1866,7 @@ void OptiXDevice::build_bvh(BVH *bvh, Progress &progress, bool refit)
 
     /* Fill instance descriptions. */
     device_vector<OptixInstance> instances(this, "optix tlas instances", MEM_READ_ONLY);
-    instances.alloc(bvh->objects.size()); TODO filter out mesh objects
+    instances.alloc(getNumObjectsNotCompatibleWithDLG(bvh->objects));
 
     /* Calculate total motion transform size and allocate memory for them. */
     size_t motion_transform_offset = 0;
@@ -1863,8 +1893,13 @@ void OptiXDevice::build_bvh(BVH *bvh, Progress &progress, bool refit)
         continue;
       }
 
-      if (ob->get_geometry()->geometry_type == Geometry::MESH) {
-        m_geoDemandLoader->addInstance(m_meshHandles[obj], m_meshAabbs[obj]/*just move this logic into DLG API, already have it on the Mesh, not need to make user specify it*/, xform);
+      if (isDLGCompatible(ob->get_geometry()->geometry_type)) {
+        demandLoadingGeometry::AffineXform xform(glm::mat4(1));
+        if (ob->get_geometry()->is_instanced()) {
+          /* Set transform matrix. */
+          memcpy(xform.data, &ob->get_tfm(), sizeof(xform.data));
+        }
+        m_geoDemandLoader->addInstance(m_meshHandles[static_cast<Mesh*>(ob->get_geometry())], xform);
         continue;
       }
 
@@ -2016,7 +2051,7 @@ void OptiXDevice::build_bvh(BVH *bvh, Progress &progress, bool refit)
       progress.set_error("Failed to build OptiX acceleration structure");
     }
     tlas_handle = bvh_optix->traversable_handle;
-    const OptixTraversableHandle dlg_handle = m_geoDemandLoader->updateScene(); // TODO make this return AS handle, and prelaunch handle returns nothing
+    const OptixTraversableHandle dlg_handle = m_geoDemandLoader->updateScene();
 
     {
       // Make another top-top-level IAS with two instances. 
@@ -2039,7 +2074,7 @@ void OptiXDevice::build_bvh(BVH *bvh, Progress &progress, bool refit)
       };
 
       OptixInstance cyclesSceneInstance = createInstance(tlas_handle);
-      OptixInstance cyclesSceneInstance = createInstance(dlg_handle);
+      OptixInstance dlgSceneInstance = createInstance(dlg_handle);
       instances[0] = cyclesSceneInstance;
       instances[1] = dlgSceneInstance;
 

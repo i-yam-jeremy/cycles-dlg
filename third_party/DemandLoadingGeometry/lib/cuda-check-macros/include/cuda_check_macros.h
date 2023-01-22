@@ -14,11 +14,9 @@
   do {                                                          \
     cudaError_t error = call;                                   \
     if (error != cudaSuccess) {                                 \
-      std::stringstream ss;                                     \
-      ss << "CUDA call (" << #call << " ) failed with error: '" \
+      std::cerr << "CUDA call (" << #call << " ) failed with error: '" \
          << cudaGetErrorString(error)                           \
-         << "' (" __FILE__ << ":" << __LINE__ << ")\n";         \
-      std::cerr << ss.str();                                    \
+         << "' (" __FILE__ << ":" << __LINE__ << ")\n";          \
       while (1) {                                               \
       }                                                         \
       std::exit(1);                                             \

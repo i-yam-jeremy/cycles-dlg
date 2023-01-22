@@ -13,10 +13,12 @@
 #  include "util/unique_ptr.h"
 
 #include <memory>
+#include <unordered_map>
 #include <DemandLoadingGeometry.hpp>
 
 CCL_NAMESPACE_BEGIN
 
+class Mesh;
 class BVHOptiX;
 struct KernelParamsOptiX;
 
@@ -59,6 +61,7 @@ using SbtRecord = demandLoadingGeometry::SBTRecord<Empty>;
 class OptiXDevice : public CUDADevice {
  public:
   std::shared_ptr<demandLoadingGeometry::GeometryDemandLoader> m_geoDemandLoader = nullptr;
+  std::unordered_map<Mesh*, demandLoadingGeometry::MeshHandle> m_meshHandles;
 
   OptixDeviceContext context = NULL;
 
