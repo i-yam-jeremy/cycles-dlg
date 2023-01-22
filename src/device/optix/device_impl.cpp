@@ -375,6 +375,8 @@ string OptiXDevice::compile_kernel_get_common_cflags(const uint kernel_features)
   return common_cflags;
 }
 
+const std::string KERNEL_DIRECTORY = "../src/kernel";
+
 bool OptiXDevice::load_kernels(const uint kernel_features)
 {
   if (have_error()) {
@@ -393,8 +395,8 @@ bool OptiXDevice::load_kernels(const uint kernel_features)
   if (need_optix_kernels) {
     ptx_filename = path_get(
         (kernel_features & (KERNEL_FEATURE_NODE_RAYTRACE | KERNEL_FEATURE_MNEE)) ?
-            "lib/kernel_optix_shader_raytrace.ptx" :
-            "lib/kernel_optix.ptx");
+            KERNEL_DIRECTORY + "/kernel_optix_shader_raytrace.ptx" :
+            KERNEL_DIRECTORY + "/kernel_optix.ptx");
     if (use_adaptive_compilation() || path_file_size(ptx_filename) == -1) {
       std::string optix_include_dir = get_optix_include_dir();
       if (optix_include_dir.empty()) {
