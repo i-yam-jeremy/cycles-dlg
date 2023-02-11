@@ -12,9 +12,9 @@
 #  include "kernel/types.h"
 #  include "util/unique_ptr.h"
 
-#include <memory>
-#include <unordered_map>
-#include <DemandLoadingGeometry.hpp>
+#  include <DemandLoadingGeometry.hpp>
+#  include <memory>
+#  include <unordered_map>
 
 CCL_NAMESPACE_BEGIN
 
@@ -41,6 +41,10 @@ enum {
   PG_HITS_POINTCLOUD,
   PG_CALL_SVM_AO,
   PG_CALL_SVM_BEVEL,
+  PG_HITD_DEMANDLOADINGGEOMETRY,
+  PG_HITS_DEMANDLOADINGGEOMETRY,
+  PG_HITL_DEMANDLOADINGGEOMETRY,
+  PG_HITV_DEMANDLOADINGGEOMETRY,
   NUM_PROGRAM_GROUPS
 };
 
@@ -55,13 +59,13 @@ static const int NUM_CALLABLE_PROGRAM_GROUPS = 2;
 enum { PIP_SHADE_RAYTRACE, PIP_SHADE_MNEE, PIP_INTERSECT, NUM_PIPELINES };
 
 /* A single shader binding table entry. */
-struct Empty{};
+struct Empty {};
 using SbtRecord = demandLoadingGeometry::SBTRecord<Empty>;
 
 class OptiXDevice : public CUDADevice {
  public:
   std::shared_ptr<demandLoadingGeometry::GeometryDemandLoader> m_geoDemandLoader = nullptr;
-  std::unordered_map<Mesh*, demandLoadingGeometry::MeshHandle> m_meshHandles;
+  std::unordered_map<Mesh *, demandLoadingGeometry::MeshHandle> m_meshHandles;
 
   OptixDeviceContext context = NULL;
 

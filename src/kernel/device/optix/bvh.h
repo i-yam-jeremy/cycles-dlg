@@ -44,13 +44,16 @@ ccl_device_forceinline int get_object_id()
 
 extern "C" __global__ void __miss__kernel_optix_miss()
 {
-  /* 'kernel_path_lamp_emission' checks intersection distance, so need to set it even on a miss. */
+  // printf("Func: %s\n", __PRETTY_FUNCTION__);
+  /* 'kernel_path_lamp_emission' checks intersection distance, so need to set it even on a
+     miss. */
   optixSetPayload_0(__float_as_uint(optixGetRayTmax()));
   optixSetPayload_5(PRIMITIVE_NONE);
 }
 
 extern "C" __global__ void __anyhit__kernel_optix_local_hit()
 {
+  printf("Func: %s\n", __PRETTY_FUNCTION__);
 #if defined(__HAIR__) || defined(__POINTCLOUD__)
   if (!optixIsTriangleHit()) {
     /* Ignore curves and points. */
@@ -133,6 +136,7 @@ extern "C" __global__ void __anyhit__kernel_optix_local_hit()
 
 extern "C" __global__ void __anyhit__kernel_optix_shadow_all_hit()
 {
+  printf("Func: %s\n", __PRETTY_FUNCTION__);
 #ifdef __SHADOW_RECORD_ALL__
   int prim = optixGetPrimitiveIndex();
   const uint object = get_object_id();
@@ -262,6 +266,7 @@ extern "C" __global__ void __anyhit__kernel_optix_shadow_all_hit()
 
 extern "C" __global__ void __anyhit__kernel_optix_volume_test()
 {
+  printf("Func: %s\n", __PRETTY_FUNCTION__);
 #if defined(__HAIR__) || defined(__POINTCLOUD__)
   if (!optixIsTriangleHit()) {
     /* Ignore curves. */
@@ -290,6 +295,7 @@ extern "C" __global__ void __anyhit__kernel_optix_volume_test()
 
 extern "C" __global__ void __anyhit__kernel_optix_visibility_test()
 {
+  printf("Func: %s\n", __PRETTY_FUNCTION__);
 #ifdef __HAIR__
 #  if OPTIX_ABI_VERSION < 55
   if (optixGetPrimitiveType() == OPTIX_PRIMITIVE_TYPE_ROUND_CUBIC_BSPLINE) {
@@ -341,6 +347,7 @@ extern "C" __global__ void __anyhit__kernel_optix_visibility_test()
 
 extern "C" __global__ void __closesthit__kernel_optix_hit()
 {
+  printf("Func: %s\n", __PRETTY_FUNCTION__);
   const int object = get_object_id();
   const int prim = optixGetPrimitiveIndex();
 
@@ -407,6 +414,7 @@ ccl_device_inline void optix_intersection_curve(const int prim, const int type)
 
 extern "C" __global__ void __intersection__curve_ribbon()
 {
+  printf("Func: %s\n", __PRETTY_FUNCTION__);
   const KernelCurveSegment segment = kernel_data_fetch(curve_segments, optixGetPrimitiveIndex());
   const int prim = segment.prim;
   const int type = segment.type;
@@ -420,6 +428,7 @@ extern "C" __global__ void __intersection__curve_ribbon()
 #ifdef __POINTCLOUD__
 extern "C" __global__ void __intersection__point()
 {
+  printf("Func: %s\n", __PRETTY_FUNCTION__);
   const int prim = optixGetPrimitiveIndex();
   const int object = get_object_id();
   const int type = kernel_data_fetch(objects, object).primitive_type;

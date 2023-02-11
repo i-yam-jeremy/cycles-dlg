@@ -291,6 +291,19 @@ OptiXDevice::OptiXDevice(const DeviceInfo &info, Stats &stats, Profiler &profile
       context, options.logCallbackFunction, options.logCallbackData, options.logCallbackLevel));
 #  endif
 
+  constexpr size_t KB = 1024;
+  constexpr size_t MB = 1024 * KB;
+  constexpr size_t GB = 1024 * MB;
+  demandLoadingGeometry::Options dlgOptions{
+      .maxPartitionInstanceCount = 1000000,
+      .maxMemory = 33 * GB,
+      .maxActiveRayCount =
+          1024 /* * 512*/ /* * 8 * 8*/,  // TODO (jberchtold) set actual upper bound here
+      .greedyLoading = false,
+      .instancePartitionerType = InstancePartitionerType::OCTREE};
+  m_geoDemandLoader = std::shared_ptr<demandLoadingGeometry::GeometryDemandLoader>(
+      demandLoadingGeometry::createDemandLoader(dlgOptions, context));
+
   /* Fix weird compiler bug that assigns wrong size. */
   launch_params.data_elements = sizeof(KernelParamsOptiX);
 
@@ -395,8 +408,11 @@ bool OptiXDevice::load_kernels(const uint kernel_features)
   if (need_optix_kernels) {
     ptx_filename = path_get(
         (kernel_features & (KERNEL_FEATURE_NODE_RAYTRACE | KERNEL_FEATURE_MNEE)) ?
-            KERNEL_DIRECTORY + "/kernel_optix_shader_raytrace.ptx" :
-            KERNEL_DIRECTORY + "/kernel_optix.ptx");
+            KERNEL_DIRECTORY +
+                "/CMakeFiles/kernel_optix_shader_raytrace.dir/device/optix/"
+                "kernel_optix_shader_raytrace.ptx" :
+            KERNEL_DIRECTORY + "/CMakeFiles/kernel_optix.dir/device/optix/kernel.ptx");
+    std::cout << "PTX: " << ptx_filename << std::endl;
     if (use_adaptive_compilation() || path_file_size(ptx_filename) == -1) {
       std::string optix_include_dir = get_optix_include_dir();
       if (optix_include_dir.empty()) {
@@ -675,19 +691,36 @@ bool OptiXDevice::load_kernels(const uint kernel_features)
         "__raygen__kernel_optix_integrator_shade_surface_mnee";
   }
 
+  const auto dlgProgDesc = m_geoDemandLoader->getOptixProgramGroup(pipeline_options,
+                                                                   module_options);
+  if (!dlgProgDesc.has_value()) {
+    std::cerr << "Error: DLG program group\n";
+    std::exit(1);
+  }
+  group_descs[PG_HITD_DEMANDLOADINGGEOMETRY] = dlgProgDesc.value();
+  group_descs[PG_HITS_DEMANDLOADINGGEOMETRY] = dlgProgDesc.value();
+  group_descs[PG_HITL_DEMANDLOADINGGEOMETRY] = dlgProgDesc.value();
+  group_descs[PG_HITV_DEMANDLOADINGGEOMETRY] = dlgProgDesc.value();
+
   optix_assert(optixProgramGroupCreate(
       context, group_descs, NUM_PROGRAM_GROUPS, &group_options, nullptr, 0, groups));
 
   /* Get program stack sizes. */
   OptixStackSizes stack_size[NUM_PROGRAM_GROUPS] = {};
+
   /* Set up SBT, which in this case is used only to select between different programs. */
+  const auto dlgEntries = m_geoDemandLoader->getInternalApiHitgroupSbtEntries(
+      sizeof(SbtRecord::data), PG_HITV_DEMANDLOADINGGEOMETRY - PG_HITD_DEMANDLOADINGGEOMETRY);
   sbt_data.alloc(NUM_PROGRAM_GROUPS);
   memset(sbt_data.host_pointer, 0, sizeof(SbtRecord) * NUM_PROGRAM_GROUPS);
+  memcpy(
+      sbt_data.data() + PG_HITD_DEMANDLOADINGGEOMETRY, dlgEntries->data, dlgEntries->sizeInBytes);
   for (unsigned int i = 0; i < NUM_PROGRAM_GROUPS; ++i) {
     optix_assert(optixSbtRecordPackHeader(groups[i], &sbt_data[i]));
     optix_assert(optixProgramGroupGetStackSize(groups[i], &stack_size[i]));
   }
-  sbt_data.copy_to_device(); /* Upload SBT to device. */
+  /* Upload SBT to device. */
+  sbt_data.copy_to_device();
 
   /* Calculate maximum trace continuation stack size. */
   unsigned int trace_css = stack_size[PG_HITD].cssCH;
@@ -735,6 +768,10 @@ bool OptiXDevice::load_kernels(const uint kernel_features)
     }
     pipeline_groups.push_back(groups[PG_CALL_SVM_AO]);
     pipeline_groups.push_back(groups[PG_CALL_SVM_BEVEL]);
+    pipeline_groups.push_back(groups[PG_HITD_DEMANDLOADINGGEOMETRY]);
+    pipeline_groups.push_back(groups[PG_HITS_DEMANDLOADINGGEOMETRY]);
+    pipeline_groups.push_back(groups[PG_HITL_DEMANDLOADINGGEOMETRY]);
+    pipeline_groups.push_back(groups[PG_HITV_DEMANDLOADINGGEOMETRY]);
 
     optix_assert(optixPipelineCreate(context,
                                      &pipeline_options,
@@ -776,6 +813,10 @@ bool OptiXDevice::load_kernels(const uint kernel_features)
     }
     pipeline_groups.push_back(groups[PG_CALL_SVM_AO]);
     pipeline_groups.push_back(groups[PG_CALL_SVM_BEVEL]);
+    pipeline_groups.push_back(groups[PG_HITD_DEMANDLOADINGGEOMETRY]);
+    pipeline_groups.push_back(groups[PG_HITS_DEMANDLOADINGGEOMETRY]);
+    pipeline_groups.push_back(groups[PG_HITL_DEMANDLOADINGGEOMETRY]);
+    pipeline_groups.push_back(groups[PG_HITV_DEMANDLOADINGGEOMETRY]);
 
     optix_assert(optixPipelineCreate(context,
                                      &pipeline_options,
@@ -816,6 +857,10 @@ bool OptiXDevice::load_kernels(const uint kernel_features)
       pipeline_groups.push_back(groups[PG_HITD_POINTCLOUD]);
       pipeline_groups.push_back(groups[PG_HITS_POINTCLOUD]);
     }
+    pipeline_groups.push_back(groups[PG_HITD_DEMANDLOADINGGEOMETRY]);
+    pipeline_groups.push_back(groups[PG_HITS_DEMANDLOADINGGEOMETRY]);
+    pipeline_groups.push_back(groups[PG_HITL_DEMANDLOADINGGEOMETRY]);
+    pipeline_groups.push_back(groups[PG_HITV_DEMANDLOADINGGEOMETRY]);
 
     optix_assert(optixPipelineCreate(context,
                                      &pipeline_options,
@@ -1412,28 +1457,29 @@ bool OptiXDevice::denoise_run(DenoiseContext &context, const DenoisePass &pass)
 }
 
 namespace {
-bool isDLGCompatible(Geometry::Type geomType) {
+bool isDLGCompatible(Geometry::Type geomType)
+{
   return geomType == Geometry::MESH;
 }
 
-size_t getNumObjectsNotCompatibleWithDLG(vector<Object *> objects) {
+size_t getNumObjectsNotCompatibleWithDLG(vector<Object *> objects)
+{
   size_t objectCount = 0;
-  for (const Object* obj: objects) {
-      if (!isDLGCompatible(obj->get_geometry()->geometry_type)) {
-        objectCount++;
-      }
+  for (const Object *obj : objects) {
+    if (!isDLGCompatible(obj->get_geometry()->geometry_type)) {
+      objectCount++;
+    }
   }
   return objectCount;
 }
-}
+}  // namespace
 
 namespace {
-OptixAabb convertBoundBoxToOptixAabb(const BoundBox& bbox) {
-  return OptixAabb{
-    bbox.min.x, bbox.min.y, bbox.min.z,
-    bbox.max.x, bbox.max.y, bbox.max.z};
+OptixAabb convertBoundBoxToOptixAabb(const BoundBox &bbox)
+{
+  return OptixAabb{bbox.min.x, bbox.min.y, bbox.min.z, bbox.max.x, bbox.max.y, bbox.max.z};
 }
-}
+}  // namespace
 
 bool OptiXDevice::build_optix_bvh(BVHOptiX *bvh,
                                   OptixBuildOperation operation,
@@ -1516,6 +1562,8 @@ bool OptiXDevice::build_optix_bvh(BVHOptiX *bvh,
                                use_fast_trace_bvh ? &compacted_size_prop : NULL,
                                use_fast_trace_bvh ? 1 : 0));
   bvh->traversable_handle = static_cast<uint64_t>(out_handle);
+  // I think switching to DLG means the BVH output var isnt set correctly and cycles gets confused
+  // (maybe unitialized values) and runs out of memory?? Idk
 
   /* Wait for all operations to finish. */
   cuda_assert(cuStreamSynchronize(NULL));
@@ -1554,6 +1602,10 @@ bool OptiXDevice::build_optix_bvh(BVHOptiX *bvh,
   }
 
   return !have_error();
+}
+
+namespace {
+BVHOptiX *topLevelCyclesPlusDLGBVH = nullptr;
 }
 
 void OptiXDevice::build_bvh(BVH *bvh, Progress &progress, bool refit)
@@ -1752,15 +1804,27 @@ void OptiXDevice::build_bvh(BVH *bvh, Progress &progress, bool refit)
         triBuildInput->positions[i] = {p.x, p.y, p.z};
       }
       triBuildInput->indices.resize(mesh->get_triangles().size() / 3);
-      static_assert(sizeof(triBuildInput->indices[0]) == 3*sizeof(mesh->get_triangles()[0]), "Index data types are not compatible.");
-      memcpy(triBuildInput->indices.data(), mesh->get_triangles().data(), triBuildInput->indices.size() * sizeof(triBuildInput->indices[0]));
+      static_assert(sizeof(triBuildInput->indices[0]) == 3 * sizeof(mesh->get_triangles()[0]),
+                    "Index data types are not compatible.");
+      memcpy(triBuildInput->indices.data(),
+             mesh->get_triangles().data(),
+             triBuildInput->indices.size() * sizeof(triBuildInput->indices[0]));
 
       demandLoadingGeometry::Mesh dlgMesh;
       dlgMesh.buildInputs.push_back(triBuildInput);
 
       OptixAabb aabb = convertBoundBoxToOptixAabb(mesh->bounds);
+      std::cout << "AABB: " << aabb.minX << ", " << aabb.minY << ", " << aabb.minZ << ", "
+                << aabb.maxX << ", " << aabb.maxY << ", " << aabb.maxZ << std::endl;
       m_meshHandles[mesh] = m_geoDemandLoader->addMesh(dlgMesh, aabb);
-      // TODO(jberchtold) mesh should have this flag OPTIX_GEOMETRY_FLAG_REQUIRE_SINGLE_ANYHIT_CALL, but idk if it should because DLG should disallow anyhit because it will cause random chunk loads, where closest hit will likely make the loads more coherent
+      // TODO(jberchtold) mesh should have this flag
+      // OPTIX_GEOMETRY_FLAG_REQUIRE_SINGLE_ANYHIT_CALL, but idk if it should because DLG should
+      // disallow anyhit because it will cause random chunk loads, where closest hit will likely
+      // make the loads more coherent
+
+      // TODO(jberchtold) idk if this does anything
+      bvh_optix->as_data->alloc_to_device(1);
+      bvh_optix->traversable_handle = 0;
     }
     else if (geom->geometry_type == Geometry::POINTCLOUD) {
       /* Build BLAS for points primitives. */
@@ -1843,7 +1907,7 @@ void OptiXDevice::build_bvh(BVH *bvh, Progress &progress, bool refit)
       }
     }
   }
-  else { // Top-level AS
+  else {  // Top-level AS
     // TODO(jberchtold) support motion-blur in DLG
     unsigned int num_instances = 0;
     unsigned int max_num_instances = 0xFFFFFFFF;
@@ -1899,7 +1963,8 @@ void OptiXDevice::build_bvh(BVH *bvh, Progress &progress, bool refit)
           /* Set transform matrix. */
           memcpy(xform.data, &ob->get_tfm(), sizeof(xform.data));
         }
-        m_geoDemandLoader->addInstance(m_meshHandles[static_cast<Mesh*>(ob->get_geometry())], xform);
+        m_geoDemandLoader->addInstance(m_meshHandles[static_cast<Mesh *>(ob->get_geometry())],
+                                       xform);
         continue;
       }
 
@@ -2051,46 +2116,57 @@ void OptiXDevice::build_bvh(BVH *bvh, Progress &progress, bool refit)
       progress.set_error("Failed to build OptiX acceleration structure");
     }
     tlas_handle = bvh_optix->traversable_handle;
-    const OptixTraversableHandle dlg_handle = m_geoDemandLoader->updateScene();
+    const OptixTraversableHandle dlg_handle = m_geoDemandLoader
+                                                  ->updateScene(PG_HITD_DEMANDLOADINGGEOMETRY - PG_HITD /* sbt offset to chunks is the position of the DLG hitgroup SBT entry relative to the base PG_HITD, which has SBT offset 0*/);
+    bvh_optix->traversable_handle = dlg_handle;
+    tlas_handle = dlg_handle;
+    // {
+    //   if (topLevelCyclesPlusDLGBVH == nullptr) {
+    //     BVHParams params{};
+    //     params.bvh_layout = BVH_LAYOUT_OPTIX;
+    //     topLevelCyclesPlusDLGBVH = static_cast<BVHOptiX *>(BVH::create(params, {}, {},
+    //     bvh_optix->device));
+    //   }
+    //   // Make another top-top-level IAS with two instances.
+    //   //     * One instance for tlas_handle (all non-DLG compatible objects, curves, hair,
+    //   // volumes, etc.)
+    //   //     * One instance for DLG handle (all DLG-managed objects)
+    //   // This is going to be inefficient because of more levels of instances and overlapping
+    //   // instances, but should be good enough for a first pass implementation.
+    //   // In the future, DLG will support curves, hair, etc. and may even support volumes
+    //   // some-day.
+    //   device_vector<OptixInstance> instances(this, "optix instances", MEM_READ_ONLY);
+    //   instances.alloc(2);
 
-    {
-      // Make another top-top-level IAS with two instances. 
-      //     * One instance for tlas_handle (all non-DLG compatible objects, curves, hair, volumes, etc.)
-      //     * One instance for DLG handle (all DLG-managed objects)
-      // This is going to be inefficient because of more levels of instances and overlapping instances, but should be good enough for a first pass implementation. 
-      // In the future, DLG will support curves, hair, etc. and may even support volumes some-day.
-      device_vector<OptixInstance> instances(this, "optix instances", MEM_READ_ONLY);
-      instances.alloc(2);
+    //   const auto createInstance = [](const OptixTraversableHandle asHandle) {
+    //     OptixInstance instance;
+    //     instance.visibilityMask = 0xFF;
+    //     instance.flags = OPTIX_INSTANCE_FLAG_NONE;
+    //     instance.traversableHandle = asHandle;
+    //     instance.transform[0] = 1.0f;
+    //     instance.transform[5] = 1.0f;
+    //     instance.transform[10] = 1.0f;
+    //     return instance;
+    //   };
 
-      const auto createInstance = [](const OptixTraversableHandle asHandle) {
-        OptixInstance instance;
-        instance.visibilityMask = 0xFF;
-        instance.flags = OPTIX_INSTANCE_FLAG_NONE;
-        instance.traversableHandle = asHandle;
-        instance.transform[0] = 1.0f;
-        instance.transform[5] = 1.0f;
-        instance.transform[10] = 1.0f;
-        return instance;
-      };
+    //   OptixInstance cyclesSceneInstance = createInstance(tlas_handle);
+    //   OptixInstance dlgSceneInstance = createInstance(dlg_handle);
+    //   instances[0] = cyclesSceneInstance;
+    //   instances[1] = dlgSceneInstance;
 
-      OptixInstance cyclesSceneInstance = createInstance(tlas_handle);
-      OptixInstance dlgSceneInstance = createInstance(dlg_handle);
-      instances[0] = cyclesSceneInstance;
-      instances[1] = dlgSceneInstance;
+    //   instances.copy_to_device();
 
-      instances.copy_to_device();
+    //   OptixBuildInput build_input = {};
+    //   build_input.type = OPTIX_BUILD_INPUT_TYPE_INSTANCES;
+    //   build_input.instanceArray.instances = instances.device_pointer;
+    //   build_input.instanceArray.numInstances = instances.size();
 
-      OptixBuildInput build_input = {};
-      build_input.type = OPTIX_BUILD_INPUT_TYPE_INSTANCES;
-      build_input.instanceArray.instances = instances.device_pointer;
-      build_input.instanceArray.numInstances = instances.size();
-
-      if (!build_optix_bvh(bvh_optix, OPTIX_BUILD_OPERATION_BUILD, build_input, 0)) {
-        progress.set_error("Failed to build OptiX acceleration structure");
-      }
-      tlas_handle = bvh_optix->traversable_handle;
-    }
-
+    //   if (!build_optix_bvh(topLevelCyclesPlusDLGBVH, OPTIX_BUILD_OPERATION_BUILD, build_input,
+    //   0)) {
+    //     progress.set_error("Failed to build OptiX acceleration structure");
+    //   }
+    //   // tlas_handle = topLevelCyclesPlusDLGBVH->traversable_handle;
+    // }
   }
 }
 

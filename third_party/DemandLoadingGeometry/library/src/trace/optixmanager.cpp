@@ -16,59 +16,60 @@ using namespace glow::memory;
 
 extern "C" const char EMBEDDED_PTX[];
 
-glow::optix::OptixManager::OptixManager(const std::shared_ptr<glow::optix::OptixConnector> optix, OptixDeviceContext context)
-    : optix(optix), context(context), log(std::vector<char>(2048)) {}
+glow::optix::OptixManager::OptixManager(const std::shared_ptr<glow::optix::OptixConnector> optix,
+                                        OptixDeviceContext context)
+    : optix(optix), context(context), log(std::vector<char>(2048))
+{
+}
 
-result<OptixProgramGroup, Err> glow::optix::OptixManager::createProgramGroup(const OptixPipelineCompileOptions &pipeline_compile_options, const OptixModuleCompileOptions &module_compile_options) {
-  if (m_hitgroup_prog_group != nullptr) {
-    return m_hitgroup_prog_group;
+result<OptixProgramGroupDesc, Err> glow::optix::OptixManager::createProgramGroup(
+    const OptixPipelineCompileOptions &pipeline_compile_options,
+    const OptixModuleCompileOptions &module_compile_options)
+{
+  if (m_module == nullptr) {
+    UNWRAP_VOID(optix->optixModuleCreateFromPTX_(context,
+                                                 &module_compile_options,
+                                                 &pipeline_compile_options,
+                                                 EMBEDDED_PTX,
+                                                 strlen(EMBEDDED_PTX),
+                                                 log,
+                                                 &m_module));
   }
 
-  UNWRAP_VOID(optix->optixModuleCreateFromPTX_(
-      context,
-      &module_compile_options,
-      &pipeline_compile_options,
-      EMBEDDED_PTX,
-      strlen(EMBEDDED_PTX),
-      log,
-      &m_module));
-
-  OptixProgramGroupOptions program_group_options = {}; // Initialize to zeros
   OptixProgramGroupDesc hitgroup_prog_group_desc = {};
   hitgroup_prog_group_desc.kind = OPTIX_PROGRAM_GROUP_KIND_HITGROUP;
   hitgroup_prog_group_desc.hitgroup.moduleCH = m_module;
-  hitgroup_prog_group_desc.hitgroup.entryFunctionNameCH = DEMANDLOADINGGEOMETRY_CHUNK_CH_SHADER_NAME_STRING;
-  UNWRAP_VOID(optix->optixProgramGroupCreate_(
-      context,
-      &hitgroup_prog_group_desc,
-      1, // num program groups
-      &program_group_options,
-      log, &m_hitgroup_prog_group));
+  hitgroup_prog_group_desc.hitgroup.entryFunctionNameCH =
+      DEMANDLOADINGGEOMETRY_CHUNK_CH_SHADER_NAME_STRING;
+  hitgroup_prog_group_desc.hitgroup.moduleAH = m_module;
+  hitgroup_prog_group_desc.hitgroup.entryFunctionNameAH =
+      DEMANDLOADINGGEOMETRY_CHUNK_AH_SHADER_NAME_STRING;
 
-  return m_hitgroup_prog_group;
+  return hitgroup_prog_group_desc;
 }
 
-result<void, Err> glow::optix::OptixManager::sbtRecordPackHeader(void *sbtEntry) {
-  UNWRAP_VOID(optix->optixSbtRecordPackHeader_(m_hitgroup_prog_group, sbtEntry));
-  return {};
-}
-
-result<OptixTraversableHandle, Err> glow::optix::OptixManager::createTopLevelTraversable(const std::vector<std::shared_ptr<glow::pipeline::render::IAsset>> &topLevelAssets) {
+result<OptixTraversableHandle, Err> glow::optix::OptixManager::createTopLevelTraversable(
+    const std::vector<std::shared_ptr<glow::pipeline::render::IAsset>> &topLevelAssets,
+    unsigned int baseDlgSbtOffset)
+{
   std::vector<demandLoadingGeometry::Chunk::InstanceList> instanceXforms(topLevelAssets.size());
   for (size_t i = 0; i < topLevelAssets.size(); i++) {
     const auto asset = topLevelAssets[i];
     auto &instanceList = instanceXforms[i];
     instanceList.assetIndex = i;
-    instanceList.instanceXforms.push_back(demandLoadingGeometry::AffineXform(asset->getChunkXform()));
+    instanceList.instanceXforms.push_back(
+        demandLoadingGeometry::AffineXform(asset->getChunkXform()));
   }
-  UNWRAP(as, createTopLevelAS(instanceXforms, topLevelAssets, (cudaStream_t)0));
+  UNWRAP(as, createTopLevelAS(instanceXforms, topLevelAssets, baseDlgSbtOffset, (cudaStream_t)0));
   this->topLevelAABBHandle = std::get<0>(as);
   this->topLevelAABBBuffer = std::get<1>(as);
 
   return this->topLevelAABBHandle;
 }
 
-void glow::optix::OptixManager::updateTopLevelAS(const std::span<OptixTraversableHandle> &topLevelAssets, cudaStream_t stream) {
+void glow::optix::OptixManager::updateTopLevelAS(
+    const std::span<OptixTraversableHandle> &topLevelAssets, cudaStream_t stream)
+{
   if (topLevelAssets.size() != m_topLevelChunkInstancesHost.size()) {
     std::cerr << "updateTopLevelAS: Incorrect number of input traversable handles passed in";
     std::exit(1);
@@ -97,7 +98,8 @@ void glow::optix::OptixManager::updateTopLevelAS(const std::span<OptixTraversabl
 
   buildInput.type = OPTIX_BUILD_INPUT_TYPE_INSTANCES;
   buildInput.instanceArray.instances = m_topLevelChunkInstances->rawOptixPtr();
-  buildInput.instanceArray.numInstances = static_cast<unsigned int>(m_topLevelChunkInstancesHost.size());
+  buildInput.instanceArray.numInstances = static_cast<unsigned int>(
+      m_topLevelChunkInstancesHost.size());
 
   const auto res = updateAS(topLevelAABBHandle, *topLevelAABBBuffer, buildInput, stream);
   if (res.has_error()) {
@@ -107,7 +109,9 @@ void glow::optix::OptixManager::updateTopLevelAS(const std::span<OptixTraversabl
   nvtxRangePop();
 }
 
-result<std::shared_ptr<glow::optix::ASData>, Err> glow::optix::OptixManager::buildAS(const demandLoadingGeometry::Mesh &mesh, int sbtOffset, cudaStream_t stream) {
+result<std::shared_ptr<glow::optix::ASData>, Err> glow::optix::OptixManager::buildAS(
+    const demandLoadingGeometry::Mesh &mesh, int sbtOffset, cudaStream_t stream)
+{
   auto asData = std::make_shared<glow::optix::ASData>();
 
   std::vector<OptixBuildInput> inputs(mesh.buildInputs.size());
@@ -115,7 +119,7 @@ result<std::shared_ptr<glow::optix::ASData>, Err> glow::optix::OptixManager::bui
   std::vector<std::vector<CUdeviceptr>> pointBufferPointers;
   std::vector<std::shared_ptr<glow::memory::DevicePtr<float3>>> pointsBuffers;
   std::vector<std::shared_ptr<glow::memory::DevicePtr<uint3>>> indexBuffers;
-  uint32_t triangleInputFlags[] = {OPTIX_GEOMETRY_FLAG_NONE};
+  uint32_t triangleInputFlags[] = {OPTIX_GEOMETRY_FLAG_REQUIRE_SINGLE_ANYHIT_CALL};
   size_t primCount = 0;
   size_t i = 0;
   for (const auto &buildInput : mesh.buildInputs) {
@@ -123,11 +127,13 @@ result<std::shared_ptr<glow::optix::ASData>, Err> glow::optix::OptixManager::bui
 
     input.type = OPTIX_BUILD_INPUT_TYPE_TRIANGLES;
 
-    auto pointsBuffer = std::make_shared<glow::memory::DevicePtr<float3>>(buildInput->positions.size() * sizeof(glm::vec3), stream);
+    auto pointsBuffer = std::make_shared<glow::memory::DevicePtr<float3>>(
+        buildInput->positions.size() * sizeof(glm::vec3), stream);
     pointsBuffer->write(buildInput->positions.data());
     pointBufferPointers.push_back({pointsBuffer->rawOptixPtr()});
 
-    auto indicesBuffer = std::make_shared<glow::memory::DevicePtr<uint3>>(buildInput->indices.size() * sizeof(glm::ivec3), stream);
+    auto indicesBuffer = std::make_shared<glow::memory::DevicePtr<uint3>>(
+        buildInput->indices.size() * sizeof(glm::ivec3), stream);
     indicesBuffer->write(buildInput->indices.data());
 
     input.triangleArray.vertexFormat = OPTIX_VERTEX_FORMAT_FLOAT3;
@@ -158,17 +164,21 @@ result<std::shared_ptr<glow::optix::ASData>, Err> glow::optix::OptixManager::bui
 }
 
 namespace {
-OptixAabb scaleAABB(const OptixAabb &aabb, float scale) {
+OptixAabb scaleAABB(const OptixAabb &aabb, float scale)
+{
   const glm::vec3 lower(aabb.minX, aabb.minY, aabb.minZ);
   const glm::vec3 upper(aabb.maxX, aabb.maxY, aabb.maxZ);
   const auto center = (lower + upper) / 2.f;
   const auto scaledLower = (lower - center) * scale + center;
   const auto scaledUpper = (upper - center) * scale + center;
-  return {scaledLower.x, scaledLower.y, scaledLower.z, scaledUpper.x, scaledUpper.y, scaledUpper.z};
+  return {
+      scaledLower.x, scaledLower.y, scaledLower.z, scaledUpper.x, scaledUpper.y, scaledUpper.z};
 }
-} // namespace
+}  // namespace
 
-result<OptixTraversableHandle, Err> glow::optix::OptixManager::getAssetAabbAS(int assetId, const std::shared_ptr<glow::pipeline::render::IAsset> asset, cudaStream_t stream) {
+result<OptixTraversableHandle, Err> glow::optix::OptixManager::getAssetAabbAS(
+    int assetId, const std::shared_ptr<glow::pipeline::render::IAsset> asset, cudaStream_t stream)
+{
   std::lock_guard guard(aabbASMutexes[assetId]);
   const auto entry = aabbASes.find(assetId);
   if (entry != aabbASes.end()) {
@@ -207,11 +217,13 @@ result<OptixTraversableHandle, Err> glow::optix::OptixManager::getAssetAabbAS(in
   input.type = OPTIX_BUILD_INPUT_TYPE_TRIANGLES;
 
   std::vector<CUdeviceptr> pointBufferPointers;
-  auto pointsBuffer = std::make_shared<glow::memory::DevicePtr<float3>>(positions.size() * sizeof(float3), stream);
+  auto pointsBuffer = std::make_shared<glow::memory::DevicePtr<float3>>(
+      positions.size() * sizeof(float3), stream);
   pointsBuffer->write(positions.data());
   pointBufferPointers.push_back({pointsBuffer->rawOptixPtr()});
 
-  auto indicesBuffer = std::make_shared<glow::memory::DevicePtr<uint3>>(indices.size() * sizeof(uint3), stream);
+  auto indicesBuffer = std::make_shared<glow::memory::DevicePtr<uint3>>(
+      indices.size() * sizeof(uint3), stream);
   indicesBuffer->write(indices.data());
 
   input.triangleArray.vertexFormat = OPTIX_VERTEX_FORMAT_FLOAT3;
@@ -224,7 +236,8 @@ result<OptixTraversableHandle, Err> glow::optix::OptixManager::getAssetAabbAS(in
   input.triangleArray.numIndexTriplets = ((int)indices.size());
   input.triangleArray.indexBuffer = indicesBuffer->rawOptixPtr();
 
-  uint32_t flags[1] = {OPTIX_GEOMETRY_FLAG_DISABLE_TRIANGLE_FACE_CULLING | OPTIX_GEOMETRY_FLAG_NONE};
+  uint32_t flags[1] = {OPTIX_GEOMETRY_FLAG_DISABLE_TRIANGLE_FACE_CULLING |
+                       OPTIX_GEOMETRY_FLAG_REQUIRE_SINGLE_ANYHIT_CALL};
   input.triangleArray.flags = flags;
   input.triangleArray.numSbtRecords = 1;
   input.triangleArray.primitiveIndexOffset = 0;
@@ -237,19 +250,29 @@ result<OptixTraversableHandle, Err> glow::optix::OptixManager::getAssetAabbAS(in
 }
 
 namespace {
-OptixInstance createInstanceForChunk(int assetIndex, OptixTraversableHandle asHandle, const demandLoadingGeometry::AffineXform &xform) {
+OptixInstance createInstanceForChunk(int assetIndex,
+                                     OptixTraversableHandle asHandle,
+                                     const demandLoadingGeometry::AffineXform &xform,
+                                     unsigned int sbtOffset)
+{
   OptixInstance instance = {};
   instance.instanceId = assetIndex;
   instance.visibilityMask = 0xFF;
   instance.flags = OPTIX_INSTANCE_FLAG_NONE;
   memcpy(instance.transform, xform.data, sizeof(instance.transform));
-  instance.sbtOffset = 0;
+  instance.sbtOffset = sbtOffset;
   instance.traversableHandle = asHandle;
   return instance;
 }
-} // namespace
+}  // namespace
 
-result<std::tuple<OptixTraversableHandle, std::shared_ptr<glow::memory::DevicePtr<char>>>, Err> glow::optix::OptixManager::createTopLevelAS(const std::vector<demandLoadingGeometry::Chunk::InstanceList> &instanceXforms, const std::vector<std::shared_ptr<glow::pipeline::render::IAsset>> &assets, cudaStream_t stream) {
+result<std::tuple<OptixTraversableHandle, std::shared_ptr<glow::memory::DevicePtr<char>>>, Err>
+glow::optix::OptixManager::createTopLevelAS(
+    const std::vector<demandLoadingGeometry::Chunk::InstanceList> &instanceXforms,
+    const std::vector<std::shared_ptr<glow::pipeline::render::IAsset>> &assets,
+    unsigned int baseDlgSbtOffset,
+    cudaStream_t stream)
+{
 
   nvtxRangePushA("createTopLevelAS:mesh AABB AS and instance building");
 
@@ -261,13 +284,15 @@ result<std::tuple<OptixTraversableHandle, std::shared_ptr<glow::memory::DevicePt
     UNWRAP(gasHandle, getAssetAabbAS(instanceList.assetIndex, asset, stream));
 
     for (const auto &xform : instanceList.instanceXforms) {
-      instances.push_back(createInstanceForChunk(instanceList.assetIndex, gasHandle, xform));
+      instances.push_back(
+          createInstanceForChunk(instanceList.assetIndex, gasHandle, xform, baseDlgSbtOffset));
     }
   }
   nvtxRangePop();
 
   nvtxRangePushA("createTopLevelAS:main AS build");
-  m_topLevelChunkInstances = std::make_shared<DevicePtr<OptixInstance>>(sizeof(OptixInstance) * instances.size(), stream);
+  m_topLevelChunkInstances = std::make_shared<DevicePtr<OptixInstance>>(
+      sizeof(OptixInstance) * instances.size(), stream);
   m_topLevelChunkInstances->write(instances.data());
 
   // Instance build input.
@@ -282,7 +307,16 @@ result<std::tuple<OptixTraversableHandle, std::shared_ptr<glow::memory::DevicePt
   return std::make_tuple(as.first, as.second);
 }
 
-result<std::tuple<OptixTraversableHandle, std::shared_ptr<glow::memory::DevicePtr<char>>>, Err> glow::optix::OptixManager::createChunkAS(const demandLoadingGeometry::Chunk &chunk, const std::vector<std::shared_ptr<glow::pipeline::render::IAsset>> &assets, const std::unordered_map<int, std::shared_ptr<glow::pipeline::render::IAsset>> &assetDependencies, float rayDifferential, int instanceCount, cudaStream_t stream) {
+result<std::tuple<OptixTraversableHandle, std::shared_ptr<glow::memory::DevicePtr<char>>>, Err>
+glow::optix::OptixManager::createChunkAS(
+    const demandLoadingGeometry::Chunk &chunk,
+    const std::vector<std::shared_ptr<glow::pipeline::render::IAsset>> &assets,
+    const std::unordered_map<int, std::shared_ptr<glow::pipeline::render::IAsset>>
+        &assetDependencies,
+    float rayDifferential,
+    int instanceCount,
+    cudaStream_t stream)
+{
 
   nvtxRangePushA("createChunkAS: instance list building");
 
@@ -297,10 +331,16 @@ result<std::tuple<OptixTraversableHandle, std::shared_ptr<glow::memory::DevicePt
       continue;
     }
 
-    glow::memory::DevicePtr<demandLoadingGeometry::AffineXform> xforms(sizeof(instanceList.instanceXforms[0]) * instanceList.instanceXforms.size(), stream);
+    glow::memory::DevicePtr<demandLoadingGeometry::AffineXform> xforms(
+        sizeof(instanceList.instanceXforms[0]) * instanceList.instanceXforms.size(), stream);
     xforms.write(instanceList.instanceXforms.data());
 
-    populateOptixInstances(deviceInstances.rawPtr() + instanceOffset, xforms.rawPtr(), asset->getAS(), asset->getSBTOffset(), instanceList.instanceXforms.size(), stream);
+    populateOptixInstances(deviceInstances.rawPtr() + instanceOffset,
+                           xforms.rawPtr(),
+                           asset->getAS(),
+                           asset->getSBTOffset(),
+                           instanceList.instanceXforms.size(),
+                           stream);
     instanceOffset += instanceList.instanceXforms.size();
   }
   nvtxRangePop();
@@ -319,12 +359,20 @@ result<std::tuple<OptixTraversableHandle, std::shared_ptr<glow::memory::DevicePt
   return std::make_tuple(as.first, as.second);
 }
 
-result<std::pair<OptixTraversableHandle, std::shared_ptr<glow::memory::DevicePtr<char>>>, Err> glow::optix::OptixManager::buildASandCompact(const OptixBuildInput &buildInput, cudaStream_t stream, bool allowUpdates) {
+result<std::pair<OptixTraversableHandle, std::shared_ptr<glow::memory::DevicePtr<char>>>, Err>
+glow::optix::OptixManager::buildASandCompact(const OptixBuildInput &buildInput,
+                                             cudaStream_t stream,
+                                             bool allowUpdates)
+{
   std::vector<OptixBuildInput> inputs = {buildInput};
   return buildASandCompact(inputs, stream, allowUpdates);
 }
 
-result<std::pair<OptixTraversableHandle, std::shared_ptr<glow::memory::DevicePtr<char>>>, Err> glow::optix::OptixManager::buildASandCompact(const std::vector<OptixBuildInput> &buildInputs, cudaStream_t stream, bool allowUpdates) {
+result<std::pair<OptixTraversableHandle, std::shared_ptr<glow::memory::DevicePtr<char>>>, Err>
+glow::optix::OptixManager::buildASandCompact(const std::vector<OptixBuildInput> &buildInputs,
+                                             cudaStream_t stream,
+                                             bool allowUpdates)
+{
 
   nvtxRangePushA("buildASandCompact:main build");
 
@@ -333,11 +381,15 @@ result<std::pair<OptixTraversableHandle, std::shared_ptr<glow::memory::DevicePtr
   if (allowUpdates) {
     build_options.buildFlags |= OPTIX_BUILD_FLAG_ALLOW_UPDATE;
   }
-  UNWRAP_VOID(optix->optixAccelComputeMemoryUsage_(context, &build_options, buildInputs.data(),
-                                                   static_cast<unsigned int>(buildInputs.size()), // Number of build inputs
-                                                   &bufferSizes));
+  UNWRAP_VOID(optix->optixAccelComputeMemoryUsage_(
+      context,
+      &build_options,
+      buildInputs.data(),
+      static_cast<unsigned int>(buildInputs.size()),  // Number of build inputs
+      &bufferSizes));
 
-  const auto uncompactedBuffer = std::make_shared<DevicePtr<char>>(bufferSizes.outputSizeInBytes, stream);
+  const auto uncompactedBuffer = std::make_shared<DevicePtr<char>>(bufferSizes.outputSizeInBytes,
+                                                                   stream);
   if (uncompactedBuffer->rawPtr() == nullptr) {
     return failure(std::make_shared<glow::util::monad::Error>("Memory allocation"));
   }
@@ -353,22 +405,25 @@ result<std::pair<OptixTraversableHandle, std::shared_ptr<glow::memory::DevicePtr
 
   OptixTraversableHandle asHandle;
   {
-    DevicePtr<char> deviceTempBuffer(bufferSizes.tempSizeInBytes, stream); // Inner scope so this temp buffer is freed as soon as possible
+    DevicePtr<char> deviceTempBuffer(
+        bufferSizes.tempSizeInBytes,
+        stream);  // Inner scope so this temp buffer is freed as soon as possible
     if (deviceTempBuffer.rawPtr() == nullptr) {
       return failure(std::make_shared<glow::util::monad::Error>("Memory allocation"));
     }
-    UNWRAP_VOID(optix->optixAccelBuild_(context,
-                                        stream, // CUDA stream
-                                        &build_options,
-                                        buildInputs.data(),
-                                        static_cast<unsigned int>(buildInputs.size()), // num build inputs
-                                        deviceTempBuffer.rawOptixPtr(),
-                                        deviceTempBuffer.size(),
-                                        uncompactedBuffer->rawOptixPtr(),
-                                        uncompactedBuffer->size(),
-                                        &asHandle,
-                                        &emitDesc, // emitted property list
-                                        1));       // num emitted properties
+    UNWRAP_VOID(
+        optix->optixAccelBuild_(context,
+                                stream,  // CUDA stream
+                                &build_options,
+                                buildInputs.data(),
+                                static_cast<unsigned int>(buildInputs.size()),  // num build inputs
+                                deviceTempBuffer.rawOptixPtr(),
+                                deviceTempBuffer.size(),
+                                uncompactedBuffer->rawOptixPtr(),
+                                uncompactedBuffer->size(),
+                                &asHandle,
+                                &emitDesc,  // emitted property list
+                                1));        // num emitted properties
     CUDA_CHECK(cudaStreamSynchronize(stream));
   }
 
@@ -388,12 +443,8 @@ result<std::pair<OptixTraversableHandle, std::shared_ptr<glow::memory::DevicePtr
     return failure(std::make_shared<glow::util::monad::Error>("Memory allocation"));
   }
   // std::cout << "Compacted Size: " << compactedSize << std::endl;
-  UNWRAP_VOID(optix->optixAccelCompact_(context,
-                                        stream,
-                                        asHandle,
-                                        compactedBuffer->rawOptixPtr(),
-                                        compactedSize,
-                                        &asHandle));
+  UNWRAP_VOID(optix->optixAccelCompact_(
+      context, stream, asHandle, compactedBuffer->rawOptixPtr(), compactedSize, &asHandle));
 
   CUDA_CHECK(cudaStreamSynchronize(stream));
 
@@ -401,40 +452,55 @@ result<std::pair<OptixTraversableHandle, std::shared_ptr<glow::memory::DevicePtr
   return std::make_pair(asHandle, compactedBuffer);
 }
 
-result<void, Err> glow::optix::OptixManager::updateAS(OptixTraversableHandle handle, glow::memory::DevicePtr<char> &buffer, const OptixBuildInput &buildInput, cudaStream_t stream) {
+result<void, Err> glow::optix::OptixManager::updateAS(OptixTraversableHandle handle,
+                                                      glow::memory::DevicePtr<char> &buffer,
+                                                      const OptixBuildInput &buildInput,
+                                                      cudaStream_t stream)
+{
   std::vector<OptixBuildInput> buildInputs(1);
   buildInputs[0] = buildInput;
   return updateAS(handle, buffer, buildInputs, stream);
 }
 
-result<void, Err> glow::optix::OptixManager::updateAS(OptixTraversableHandle asHandle, glow::memory::DevicePtr<char> &buffer, const std::vector<OptixBuildInput> &buildInputs, cudaStream_t stream) {
+result<void, Err> glow::optix::OptixManager::updateAS(
+    OptixTraversableHandle asHandle,
+    glow::memory::DevicePtr<char> &buffer,
+    const std::vector<OptixBuildInput> &buildInputs,
+    cudaStream_t stream)
+{
   nvtxRangePushA("updateAS");
 
   OptixAccelBufferSizes bufferSizes;
   OptixAccelBuildOptions build_options = accel_options;
   build_options.buildFlags |= OPTIX_BUILD_FLAG_ALLOW_UPDATE;
   build_options.operation = OPTIX_BUILD_OPERATION_UPDATE;
-  UNWRAP_VOID(optix->optixAccelComputeMemoryUsage_(context, &build_options, buildInputs.data(),
-                                                   static_cast<unsigned int>(buildInputs.size()), // Number of build inputs
-                                                   &bufferSizes));
+  UNWRAP_VOID(optix->optixAccelComputeMemoryUsage_(
+      context,
+      &build_options,
+      buildInputs.data(),
+      static_cast<unsigned int>(buildInputs.size()),  // Number of build inputs
+      &bufferSizes));
 
   {
-    DevicePtr<char> deviceTempBuffer(bufferSizes.tempSizeInBytes, stream); // Inner scope so this temp buffer is freed as soon as possible
+    DevicePtr<char> deviceTempBuffer(
+        bufferSizes.tempSizeInBytes,
+        stream);  // Inner scope so this temp buffer is freed as soon as possible
     if (deviceTempBuffer.rawPtr() == nullptr) {
       return failure(std::make_shared<glow::util::monad::Error>("Memory allocation"));
     }
-    UNWRAP_VOID(optix->optixAccelBuild_(context,
-                                        stream, // CUDA stream
-                                        &build_options,
-                                        buildInputs.data(),
-                                        static_cast<unsigned int>(buildInputs.size()), // num build inputs
-                                        deviceTempBuffer.rawOptixPtr(),
-                                        deviceTempBuffer.size(),
-                                        buffer.rawOptixPtr(),
-                                        buffer.size(),
-                                        &asHandle,
-                                        nullptr, // emitted property list
-                                        0));     // num emitted properties
+    UNWRAP_VOID(
+        optix->optixAccelBuild_(context,
+                                stream,  // CUDA stream
+                                &build_options,
+                                buildInputs.data(),
+                                static_cast<unsigned int>(buildInputs.size()),  // num build inputs
+                                deviceTempBuffer.rawOptixPtr(),
+                                deviceTempBuffer.size(),
+                                buffer.rawOptixPtr(),
+                                buffer.size(),
+                                &asHandle,
+                                nullptr,  // emitted property list
+                                0));      // num emitted properties
     CUDA_CHECK(cudaStreamSynchronize(stream));
   }
 
@@ -442,15 +508,21 @@ result<void, Err> glow::optix::OptixManager::updateAS(OptixTraversableHandle asH
   return {};
 }
 
-result<OptixAccelBufferSizes, Err> glow::optix::OptixManager::computeMemoryUsage(const OptixBuildInput &buildInput) {
+result<OptixAccelBufferSizes, Err> glow::optix::OptixManager::computeMemoryUsage(
+    const OptixBuildInput &buildInput)
+{
   std::vector<OptixBuildInput> inputs = {buildInput};
   return computeMemoryUsage(inputs);
 }
 
-result<OptixAccelBufferSizes, Err> glow::optix::OptixManager::computeMemoryUsage(const std::vector<OptixBuildInput> &buildInputs) {
+result<OptixAccelBufferSizes, Err> glow::optix::OptixManager::computeMemoryUsage(
+    const std::vector<OptixBuildInput> &buildInputs)
+{
   OptixAccelBufferSizes bufferSizes;
-  UNWRAP_VOID(optix->optixAccelComputeMemoryUsage_(context, &accel_options, buildInputs.data(),
-                                                   buildInputs.size(), // Number of build inputs
+  UNWRAP_VOID(optix->optixAccelComputeMemoryUsage_(context,
+                                                   &accel_options,
+                                                   buildInputs.data(),
+                                                   buildInputs.size(),  // Number of build inputs
                                                    &bufferSizes));
   return bufferSizes;
 }

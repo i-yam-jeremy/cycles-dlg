@@ -1,6 +1,6 @@
 <cycles>
 <!-- Camera -->
-<camera width="800" height="500" />
+<camera width="16" height="16" />
 
 <transform translate="0 0 -4" scale="1 1 1">
 	<camera type="perspective" />

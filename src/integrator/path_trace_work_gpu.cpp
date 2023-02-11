@@ -445,6 +445,7 @@ void PathTraceWorkGPU::enqueue_path_iteration(DeviceKernel kernel, const int num
 
   IntegratorQueueCounter *queue_counter = integrator_queue_counter_.data();
   int num_queued = queue_counter->num_queued[kernel];
+  // TODO(jberchtold) integrator_queue_counter is where the queue sizes are stored on device
 
   if (kernel_uses_sorting(kernel)) {
     /* Compute array of active paths, sorted by shader. */

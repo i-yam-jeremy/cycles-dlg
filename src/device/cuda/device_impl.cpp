@@ -705,6 +705,8 @@ CUDADevice::CUDAMem *CUDADevice::generic_alloc(device_memory &mem, size_t pitch_
     else {
       status = " failed, out of device and host memory";
       set_error("System is out of GPU and shared host memory");
+      std::cout << "Cycles Alloc: " << mem.memory_size() << ", " << mem.type << std::endl;
+      throw new std::runtime_error("OOM");
     }
   }
 

@@ -21,7 +21,7 @@ constexpr size_t meshMemoryUsageThreshold = 1000000000 * MB;
 // constexpr size_t meshMemoryUsageThreshold = 250 * MB;
 constexpr size_t chunkInstanceCountThreshold = 1000000; // 1000 - 2500 works well for budda fractal scene
 
-InstancePartitioner::InstancePartitioner(const OptixAabb &sceneBounds) : sceneBounds(sceneBounds) {
+InstancePartitioner::InstancePartitioner() {
   rootChunk = std::make_shared<glow::pipeline::render::Chunk>(sceneBounds, glm::mat4(1));
 }
 
@@ -33,6 +33,43 @@ OptixAabb scaleAABB(const OptixAabb &aabb, float scale) {
   const auto scaledLower = (lower - center) * scale + center;
   const auto scaledUpper = (upper - center) * scale + center;
   return {scaledLower.x, scaledLower.y, scaledLower.z, scaledUpper.x, scaledUpper.y, scaledUpper.z};
+}
+
+OptixAabb aabbUnion(const OptixAabb& a, const OptixAabb& b) {
+  OptixAabb out{};
+  out.minX = std::min(a.minX, b.minX);
+  out.minY = std::min(a.minY, b.minY);
+  out.minZ = std::min(a.minZ, b.minZ);
+  out.maxX = std::max(a.maxX, b.maxX);
+  out.maxY = std::max(a.maxY, b.maxY);
+  out.maxZ = std::max(a.maxZ, b.maxZ);
+  return out;
+}
+
+OptixAabb transformAabb(const OptixAabb& aabb, const demandLoadingGeometry::AffineXform& xform) {
+  const glm::vec3 aabbCorners[] = {
+      glm::vec3(aabb.minX, aabb.minY, aabb.minZ),
+      glm::vec3(aabb.minX, aabb.minY, aabb.maxZ),
+      glm::vec3(aabb.minX, aabb.maxY, aabb.minZ),
+      glm::vec3(aabb.minX, aabb.maxY, aabb.maxZ),
+      glm::vec3(aabb.maxX, aabb.minY, aabb.minZ),
+      glm::vec3(aabb.maxX, aabb.minY, aabb.maxZ),
+      glm::vec3(aabb.maxX, aabb.maxY, aabb.minZ),
+      glm::vec3(aabb.maxX, aabb.maxY, aabb.maxZ)};
+
+  const auto instanceXform = xform.toMat();
+  OptixAabb transformedAabb = {1e20, 1e20, 1e20, -1e20, -1e20, -1e20};
+  for (const auto pLocal : aabbCorners) {
+    const auto pWorld = glm::vec3(instanceXform * glm::vec4(pLocal, 1));
+    transformedAabb = {
+        fmin(transformedAabb.minX, pWorld.x),
+        fmin(transformedAabb.minY, pWorld.y),
+        fmin(transformedAabb.minZ, pWorld.z),
+        fmax(transformedAabb.maxX, pWorld.x),
+        fmax(transformedAabb.maxY, pWorld.y),
+        fmax(transformedAabb.maxZ, pWorld.z)};
+  }
+  return transformedAabb;
 }
 } // namespace
 
@@ -52,6 +89,7 @@ void InstancePartitioner::add(int meshId, const demandLoadingGeometry::AffineXfo
     return;
   }
 
+  sceneBounds = aabbUnion(sceneBounds, transformAabb(aabb->second, instanceXform));
 
   if (memoryUsage->second >= meshMemoryUsageThreshold) {
     auto meshChunk = std::make_shared<glow::pipeline::render::Chunk>(scaleAABB(aabb->second, 1.), instanceXform.toMat());
@@ -132,9 +170,34 @@ void InstancePartitioner::subdivideChunk(const std::shared_ptr<glow::pipeline::r
   cudaStream_t stream;
   CUDA_CHECK(cudaStreamCreate(&stream));
 
+  const auto completeChunk = [&, this](std::shared_ptr<Chunk> chunk) {
+    if (chunk->getInstances().size() == 0) {
+      return;
+    }
+    prefetchInstancesAsync(chunk->getInstances(), stream, cudaCpuDeviceId);
+    memadviseInstancesReadonly(chunk->getInstances(), cudaCpuDeviceId);
+    // if (usedChunkAabbs.contains(chunk->getAabb())) { // TODO FIXME hack to prevent duplicate chunks
+    //   continue;
+    // }
+    // usedChunkAabbs.insert(chunk->getAabb());
+    auto chunkData = std::make_shared<glow::pipeline::render::Chunk>(chunk->getAabb(), glm::mat4(1));
+    for (size_t instanceIndex = 0; instanceIndex < chunk->getInstances().size(); instanceIndex++) {
+      const auto &instance = chunk->getInstances()[instanceIndex];
+      chunkData->addInstance(instance.meshId, instance.xform);
+    }
+    callback(chunkData);
+    this->chunkCount++;
+    // size_t meshUsage = 0;
+    // for (const auto &entry : chunk->getInstanceXforms()) {
+    //   meshUsage += meshMemoryUsages[entry.first];
+    // }
+    // const auto iasSize = estimateIasSize(chunk->getInstanceCount());
+    std::cout << this->chunkCount << ", " << depth << ", " << chunk->getInstances().size() << std::endl; // << ", " << ((meshUsage + iasSize) / MB) << "MB, " << (meshUsage / MB) << "MB, " << chunk->getInstanceXforms().size() << " unique meshes" << std::endl;
+  };
+
   // Create buffers
   std::cout << "Root chunk: " << rootChunk->getInstanceCount() << std::endl;
-  glow::memory::DevicePtr<char> d_temp_storage(rootChunk->getInstanceCount() /*can probably get away with lower than this much temp storage*/, stream);
+  glow::memory::DevicePtr<char> d_temp_storage(1024 + rootChunk->getInstanceCount() /*can probably get away with lower than this much temp storage*/, stream);
   glow::memory::DevicePtr<int> d_num_selected_out(sizeof(int), stream);
   glow::memory::DevicePtr<OptixAabb> d_meshAabbs(sizeof(OptixAabb) * m_meshAabbs.size(), stream);
   {
@@ -157,6 +220,11 @@ void InstancePartitioner::subdivideChunk(const std::shared_ptr<glow::pipeline::r
     }
     prefetchInstancesAsync(instances, stream);
     memadviseInstancesReadonly(instances);
+  }
+
+  if (rootChunk->getInstanceCount() <= chunkInstanceCountThreshold) {
+    completeChunk(chunks[0]);
+    return;
   }
 
   while (chunks.size() > 0) {
@@ -205,28 +273,7 @@ void InstancePartitioner::subdivideChunk(const std::shared_ptr<glow::pipeline::r
         size_t instanceCount = subChunk->getInstances().size();
         std::cout << "Subchunk: " << instanceCount << std::endl;
         if (instanceCount <= chunkInstanceCountThreshold) {
-          if (instanceCount == 0) {
-            continue;
-          }
-          prefetchInstancesAsync(subChunk->getInstances(), stream, cudaCpuDeviceId);
-          memadviseInstancesReadonly(subChunk->getInstances(), cudaCpuDeviceId);
-          // if (usedChunkAabbs.contains(subChunk->getAabb())) { // TODO FIXME hack to prevent duplicate chunks
-          //   continue;
-          // }
-          usedChunkAabbs.insert(subChunk->getAabb());
-          auto chunk = std::make_shared<glow::pipeline::render::Chunk>(subChunk->getAabb(), glm::mat4(1));
-          for (size_t instanceIndex = 0; instanceIndex < subChunk->getInstances().size(); instanceIndex++) {
-            const auto &instance = subChunk->getInstances()[instanceIndex];
-            chunk->addInstance(instance.meshId, instance.xform);
-          }
-          callback(chunk);
-          this->chunkCount++;
-          // size_t meshUsage = 0;
-          // for (const auto &entry : subChunk->getInstanceXforms()) {
-          //   meshUsage += meshMemoryUsages[entry.first];
-          // }
-          // const auto iasSize = estimateIasSize(subChunk->getInstanceCount());
-          std::cout << this->chunkCount << ", " << depth << ", " << instanceCount << std::endl; // << ", " << ((meshUsage + iasSize) / MB) << "MB, " << (meshUsage / MB) << "MB, " << subChunk->getInstanceXforms().size() << " unique meshes" << std::endl;
+          completeChunk(subChunk);
         } else {
           chunks.push_back(subChunk);
         }
@@ -275,7 +322,7 @@ int InstancePartitioner::writeChunks(std::function<void(const std::shared_ptr<gl
   // }
 
   std::unordered_set<OptixAabb, OptixAabbHash, OptixAabbEq> usedChunkAabbs;
-  for (const auto meshChunk : meshChunks) {
+  for (const auto& meshChunk : meshChunks) {
     if (usedChunkAabbs.find(meshChunk->aabb) != usedChunkAabbs.end()) { // TODO FIXME hack to prevent duplicate chunks
       continue;
     }

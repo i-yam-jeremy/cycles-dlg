@@ -11,7 +11,7 @@ namespace glow::pipeline::sceneloader::partition {
 
 class InstancePartitioner {
 public:
-  InstancePartitioner(const OptixAabb &sceneBounds);
+  InstancePartitioner();
   virtual ~InstancePartitioner() = default;
   void setMeshInfo(int meshId, const OptixAabb& aabb, const size_t memoryUsage);
   void add(int meshId, const demandLoadingGeometry::AffineXform &instanceXform);
@@ -37,14 +37,14 @@ protected:
   std::shared_ptr<glow::pipeline::render::Chunk> rootChunk = nullptr;
   std::unordered_map<int, OptixAabb> m_meshAabbs;
   std::unordered_map<int, size_t> m_meshMemoryUsages;
-  OptixAabb sceneBounds;
+  OptixAabb sceneBounds{1e20, 1e20, 1e20, -1e20, -1e20, -1e20};
   int chunkCount = 0;
   std::vector<std::shared_ptr<glow::pipeline::render::Chunk>> meshChunks;
 };
 
 class OctreePartitioner : public InstancePartitioner {
 public:
-  OctreePartitioner(const OptixAabb &sceneBounds) : InstancePartitioner(sceneBounds){};
+  OctreePartitioner() : InstancePartitioner(){};
   ~OctreePartitioner() override = default;
 
 protected:
@@ -53,7 +53,7 @@ protected:
 };
 class KdTreePartitioner : public InstancePartitioner {
 public:
-  KdTreePartitioner(const OptixAabb &sceneBounds) : InstancePartitioner(sceneBounds){};
+  KdTreePartitioner() : InstancePartitioner(){};
   ~KdTreePartitioner() override = default;
 
 protected:

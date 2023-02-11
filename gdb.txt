@@ -1,0 +1,2 @@
+catch throw
+r --samples 100 --device OPTIX --output image.png examples/scene_monkey.xml

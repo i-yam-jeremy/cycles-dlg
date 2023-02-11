@@ -14,6 +14,7 @@ struct Instance {
 class InstanceList {
 public:
   InstanceList(size_t capacity /*in number of instances, not bytes*/) : m_capacity(capacity), m_size(0) {
+    std::cout << "Allocating: " << (sizeof(Instance)*capacity) << std::endl;
     CUDA_CHECK(cudaMallocManaged(&m_instances, sizeof(Instance) * capacity));
   }
 

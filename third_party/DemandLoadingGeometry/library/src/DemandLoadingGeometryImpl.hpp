@@ -11,28 +11,37 @@
 namespace demandLoadingGeometry {
 
 class GeometryDemandLoaderImpl {
-public:
-  GeometryDemandLoaderImpl(std::unique_ptr<glow::pipeline::sceneloader::partition::InstancePartitioner> instancePartitioner, const Options &options, OptixDeviceContext context);
+ public:
+  GeometryDemandLoaderImpl(
+      std::unique_ptr<glow::pipeline::sceneloader::partition::InstancePartitioner>
+          instancePartitioner,
+      const Options &options,
+      OptixDeviceContext context);
   ~GeometryDemandLoaderImpl();
 
   // Package internal OptiX shaders for user to link into their pipeline
-  std::optional<OptixProgramGroup> getOptixProgramGroup(const OptixPipelineCompileOptions &pipeline_compile_options, const OptixModuleCompileOptions &module_compile_options);
+  std::optional<OptixProgramGroupDesc> getOptixProgramGroup(
+      const OptixPipelineCompileOptions &pipeline_compile_options,
+      const OptixModuleCompileOptions &module_compile_options);
 
   // Scene Building API
   // void reserveSpaceForNewInstances(size_t instanceCount);
-  MeshHandle addMesh(const Mesh &mesh, const std::optional<OptixAabb>& aabb);
+  MeshHandle addMesh(const Mesh &mesh, const std::optional<OptixAabb> &aabb);
   void addInstance(MeshHandle meshHandle, const AffineXform &xform);
-  OptixTraversableHandle updateScene();
+  OptixTraversableHandle updateScene(unsigned int baseDlgSbtOffset);
 
-  std::unique_ptr<SBTBuffer> getInternalApiHitgroupSbtEntries(size_t sizeOfUserSbtStruct);
+  std::unique_ptr<SBTBuffer> getInternalApiHitgroupSbtEntries(size_t sizeOfUserSbtStruct,
+                                                              uint32_t maxTraceSbtOffset);
 
   // Tracing API
-  demandLoadingGeometry::LaunchData preLaunch(demandLoadingGeometry::RayIndex *d_endOfUserRayQueue, cudaStream_t stream);
+  demandLoadingGeometry::LaunchData preLaunch(demandLoadingGeometry::RayIndex *d_endOfUserRayQueue,
+                                              cudaStream_t stream);
   void postLaunch(cudaStream_t stream);
 
-private:
+ private:
   GeometryDeviceContext m_deviceContext;
-  std::unique_ptr<glow::pipeline::sceneloader::partition::InstancePartitioner> m_instancePartitioner = nullptr;
+  std::unique_ptr<glow::pipeline::sceneloader::partition::InstancePartitioner>
+      m_instancePartitioner = nullptr;
   Options m_options;
 
   std::vector<Mesh> m_meshes;
@@ -47,9 +56,9 @@ private:
 
   void partition();
   void updateAssets();
-  OptixTraversableHandle createTopLevelTraversable();
+  OptixTraversableHandle createTopLevelTraversable(unsigned int baseDlgSbtOffset);
   void updateAssetCache();
   void clearAssetRayCounts();
 };
 
-} // namespace demandLoadingGeometry
+}  // namespace demandLoadingGeometry
