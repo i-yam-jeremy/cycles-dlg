@@ -100,6 +100,8 @@ void GeometryDemandLoaderImpl::addInstance(MeshHandle meshHandle, const AffineXf
 
 OptixTraversableHandle GeometryDemandLoaderImpl::updateScene(unsigned int baseDlgSbtOffset)
 {
+  CUDA_CHECK(cudaDeviceSynchronize());
+
   for (const auto &d_rayQueue : m_stalledRayQueues) {
     CUDA_CHECK(cudaFree(d_rayQueue));
   }
@@ -131,6 +133,8 @@ OptixTraversableHandle GeometryDemandLoaderImpl::updateScene(unsigned int baseDl
                         cudaMemcpyHostToDevice));
 
   CUDA_CHECK(cudaStreamSynchronize((cudaStream_t)0));
+
+  CUDA_CHECK(cudaDeviceSynchronize());
 
   return m_deviceContext.sceneTraversableHandle;
 }

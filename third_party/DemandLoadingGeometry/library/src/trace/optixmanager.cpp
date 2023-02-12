@@ -258,7 +258,7 @@ OptixInstance createInstanceForChunk(int assetIndex,
   OptixInstance instance = {};
   instance.instanceId = assetIndex;
   instance.visibilityMask = 0xFF;
-  instance.flags = OPTIX_INSTANCE_FLAG_NONE;
+  instance.flags = OPTIX_INSTANCE_FLAG_DISABLE_ANYHIT;
   memcpy(instance.transform, xform.data, sizeof(instance.transform));
   instance.sbtOffset = sbtOffset;
   instance.traversableHandle = asHandle;

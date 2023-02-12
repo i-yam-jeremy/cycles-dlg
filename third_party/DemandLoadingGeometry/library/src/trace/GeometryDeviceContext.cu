@@ -9,11 +9,13 @@ constexpr double EPSILON = 0.1f;  // NOTE: 0.1f for Moana island, 0.001f for bud
 
 extern "C" __global__ void DEMANDLOADINGGEOMETRY_CHUNK_AH_SHADER_NAME()
 {
+  printf("Func: %s\n", __PRETTY_FUNCTION__);
   printf("Hello!!!\n");  // Currently just for debugging
 }
 
 extern "C" __global__ void DEMANDLOADINGGEOMETRY_CHUNK_CH_SHADER_NAME()
 {
+  printf("Func: %s\n", __PRETTY_FUNCTION__);
   // Note: optixGetSbtDataPointer() points to the SBT entry data after the SBT entry header
   auto &dlgContext =
       reinterpret_cast<internal::ChunkSBTEntry *>(optixGetSbtDataPointer())->context;

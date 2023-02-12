@@ -281,10 +281,10 @@ OptiXDevice::OptiXDevice(const DeviceInfo &info, Stats &stats, Profiler &profile
     std::cout << message << std::endl;
   };
   // #  endif
-  if (DebugFlags().optix.use_debug) {
-    VLOG_INFO << "Using OptiX debug mode.";
-    options.validationMode = OPTIX_DEVICE_CONTEXT_VALIDATION_MODE_ALL;
-  }
+  // if (DebugFlags().optix.use_debug) {
+  VLOG_INFO << "Using OptiX debug mode.";
+  // options.validationMode = OPTIX_DEVICE_CONTEXT_VALIDATION_MODE_ALL;
+  // }
   optix_assert(optixDeviceContextCreate(cuContext, &options, &context));
 #  ifdef WITH_CYCLES_LOGGING
   optix_assert(optixDeviceContextSetLogCallback(
@@ -483,8 +483,7 @@ bool OptiXDevice::load_kernels(const uint kernel_features)
   OptixPipelineCompileOptions pipeline_options = {};
   /* Default to no motion blur and two-level graph, since it is the fastest option. */
   pipeline_options.usesMotionBlur = false;
-  pipeline_options.traversableGraphFlags =
-      OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_LEVEL_INSTANCING;
+  pipeline_options.traversableGraphFlags = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_ANY;
   pipeline_options.numPayloadValues = 8;
   pipeline_options.numAttributeValues = 2; /* u, v */
   pipeline_options.exceptionFlags = OPTIX_EXCEPTION_FLAG_NONE;
@@ -1825,6 +1824,70 @@ void OptiXDevice::build_bvh(BVH *bvh, Progress &progress, bool refit)
       // TODO(jberchtold) idk if this does anything
       bvh_optix->as_data->alloc_to_device(1);
       bvh_optix->traversable_handle = 0;
+
+      {
+        const size_t num_verts = mesh->get_verts().size();
+
+        size_t num_motion_steps = 1;
+        Attribute *motion_keys = mesh->attributes.find(ATTR_STD_MOTION_VERTEX_POSITION);
+        if (motion_blur && mesh->get_use_motion_blur() && motion_keys) {
+          num_motion_steps = mesh->get_motion_steps();
+        }
+
+        device_vector<int> index_data(this, "optix temp index data", MEM_READ_ONLY);
+        index_data.alloc(mesh->get_triangles().size());
+        memcpy(index_data.data(),
+               mesh->get_triangles().data(),
+               mesh->get_triangles().size() * sizeof(int));
+        device_vector<float4> vertex_data(this, "optix temp vertex data", MEM_READ_ONLY);
+        vertex_data.alloc(num_verts * num_motion_steps);
+
+        for (size_t step = 0; step < num_motion_steps; ++step) {
+          const float3 *verts = mesh->get_verts().data();
+
+          size_t center_step = (num_motion_steps - 1) / 2;
+          /* The center step for motion vertices is not stored in the attribute. */
+          if (step != center_step) {
+            verts = motion_keys->data_float3() +
+                    (step > center_step ? step - 1 : step) * num_verts;
+          }
+
+          memcpy(vertex_data.data() + num_verts * step, verts, num_verts * sizeof(float3));
+        }
+
+        /* Upload triangle data to GPU. */
+        index_data.copy_to_device();
+        vertex_data.copy_to_device();
+
+        vector<device_ptr> vertex_ptrs;
+        vertex_ptrs.reserve(num_motion_steps);
+        for (size_t step = 0; step < num_motion_steps; ++step) {
+          vertex_ptrs.push_back(vertex_data.device_pointer + num_verts * step * sizeof(float3));
+        }
+
+        /* Force a single any-hit call, so shadow record-all behavior works correctly. */
+        unsigned int build_flags = OPTIX_GEOMETRY_FLAG_REQUIRE_SINGLE_ANYHIT_CALL;
+        OptixBuildInput build_input = {};
+        build_input.type = OPTIX_BUILD_INPUT_TYPE_TRIANGLES;
+        build_input.triangleArray.vertexBuffers = (CUdeviceptr *)vertex_ptrs.data();
+        build_input.triangleArray.numVertices = num_verts;
+        build_input.triangleArray.vertexFormat = OPTIX_VERTEX_FORMAT_FLOAT3;
+        build_input.triangleArray.vertexStrideInBytes = sizeof(float4);
+        build_input.triangleArray.indexBuffer = index_data.device_pointer;
+        build_input.triangleArray.numIndexTriplets = mesh->num_triangles();
+        build_input.triangleArray.indexFormat = OPTIX_INDICES_FORMAT_UNSIGNED_INT3;
+        build_input.triangleArray.indexStrideInBytes = 3 * sizeof(int);
+        build_input.triangleArray.flags = &build_flags;
+        /* The SBT does not store per primitive data since Cycles already allocates separate
+         * buffers for that purpose. OptiX does not allow this to be zero though, so just pass in
+         * one and rely on that having the same meaning in this case. */
+        build_input.triangleArray.numSbtRecords = 1;
+        build_input.triangleArray.primitiveIndexOffset = mesh->prim_offset;
+
+        if (!build_optix_bvh(bvh_optix, operation, build_input, num_motion_steps)) {
+          progress.set_error("Failed to build OptiX acceleration structure");
+        }
+      }
     }
     else if (geom->geometry_type == Geometry::POINTCLOUD) {
       /* Build BLAS for points primitives. */
@@ -1930,7 +1993,7 @@ void OptiXDevice::build_bvh(BVH *bvh, Progress &progress, bool refit)
 
     /* Fill instance descriptions. */
     device_vector<OptixInstance> instances(this, "optix tlas instances", MEM_READ_ONLY);
-    instances.alloc(getNumObjectsNotCompatibleWithDLG(bvh->objects));
+    instances.alloc(/*getNumObjectsNotCompatibleWithDLG(bvh->objects)*/ bvh->objects.size());
 
     /* Calculate total motion transform size and allocate memory for them. */
     size_t motion_transform_offset = 0;
@@ -1958,14 +2021,16 @@ void OptiXDevice::build_bvh(BVH *bvh, Progress &progress, bool refit)
       }
 
       if (isDLGCompatible(ob->get_geometry()->geometry_type)) {
+        std::cout << "FOUND INSTANCE: \n";
         demandLoadingGeometry::AffineXform xform(glm::mat4(1));
         if (ob->get_geometry()->is_instanced()) {
+          std::cout << "Instanced geo\n";
           /* Set transform matrix. */
           memcpy(xform.data, &ob->get_tfm(), sizeof(xform.data));
         }
         m_geoDemandLoader->addInstance(m_meshHandles[static_cast<Mesh *>(ob->get_geometry())],
                                        xform);
-        continue;
+        // continue;
       }
 
       BVHOptiX *const blas = static_cast<BVHOptiX *>(ob->get_geometry()->bvh);
@@ -2117,15 +2182,20 @@ void OptiXDevice::build_bvh(BVH *bvh, Progress &progress, bool refit)
     }
     tlas_handle = bvh_optix->traversable_handle;
     const OptixTraversableHandle dlg_handle = m_geoDemandLoader
-                                                  ->updateScene(PG_HITD_DEMANDLOADINGGEOMETRY - PG_HITD /* sbt offset to chunks is the position of the DLG hitgroup SBT entry relative to the base PG_HITD, which has SBT offset 0*/);
+                                                  ->updateScene(PG_HITD_DEMANDLOADINGGEOMETRY -
+                                                  PG_HITD /* sbt offset to chunks is the
+                                                  position of the DLG hitgroup SBT entry
+                                                  relative to the base PG_HITD, which has SBT
+                                                  offset 0*/);
     bvh_optix->traversable_handle = dlg_handle;
     tlas_handle = dlg_handle;
+
     // {
     //   if (topLevelCyclesPlusDLGBVH == nullptr) {
     //     BVHParams params{};
     //     params.bvh_layout = BVH_LAYOUT_OPTIX;
-    //     topLevelCyclesPlusDLGBVH = static_cast<BVHOptiX *>(BVH::create(params, {}, {},
-    //     bvh_optix->device));
+    //     topLevelCyclesPlusDLGBVH = static_cast<BVHOptiX *>(
+    //         BVH::create(params, {}, {}, bvh_optix->device));
     //   }
     //   // Make another top-top-level IAS with two instances.
     //   //     * One instance for tlas_handle (all non-DLG compatible objects, curves, hair,
@@ -2161,11 +2231,12 @@ void OptiXDevice::build_bvh(BVH *bvh, Progress &progress, bool refit)
     //   build_input.instanceArray.instances = instances.device_pointer;
     //   build_input.instanceArray.numInstances = instances.size();
 
-    //   if (!build_optix_bvh(topLevelCyclesPlusDLGBVH, OPTIX_BUILD_OPERATION_BUILD, build_input,
-    //   0)) {
+    //   if (!build_optix_bvh(
+    //           topLevelCyclesPlusDLGBVH, OPTIX_BUILD_OPERATION_BUILD, build_input, 0)) {
     //     progress.set_error("Failed to build OptiX acceleration structure");
     //   }
-    //   // tlas_handle = topLevelCyclesPlusDLGBVH->traversable_handle;
+    //   tlas_handle = topLevelCyclesPlusDLGBVH->traversable_handle;
+    //   bvh_optix->traversable_handle = tlas_handle;
     // }
   }
 }
