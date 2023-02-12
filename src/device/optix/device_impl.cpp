@@ -283,7 +283,7 @@ OptiXDevice::OptiXDevice(const DeviceInfo &info, Stats &stats, Profiler &profile
   // #  endif
   // if (DebugFlags().optix.use_debug) {
   VLOG_INFO << "Using OptiX debug mode.";
-  // options.validationMode = OPTIX_DEVICE_CONTEXT_VALIDATION_MODE_ALL;
+  options.validationMode = OPTIX_DEVICE_CONTEXT_VALIDATION_MODE_ALL;
   // }
   optix_assert(optixDeviceContextCreate(cuContext, &options, &context));
 #  ifdef WITH_CYCLES_LOGGING
@@ -2181,6 +2181,7 @@ void OptiXDevice::build_bvh(BVH *bvh, Progress &progress, bool refit)
       progress.set_error("Failed to build OptiX acceleration structure");
     }
     tlas_handle = bvh_optix->traversable_handle;
+    const CUDAContextScope scope(this);
     const OptixTraversableHandle dlg_handle = m_geoDemandLoader
                                                   ->updateScene(PG_HITD_DEMANDLOADINGGEOMETRY -
                                                   PG_HITD /* sbt offset to chunks is the
