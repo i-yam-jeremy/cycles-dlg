@@ -52,7 +52,7 @@ ccl_device void integrator_volume_stack_update_for_subsurface(KernelGlobals kg,
   Intersection isect;
   int step = 0;
   while (step < 2 * volume_stack_size &&
-         scene_intersect_volume(kg, &volume_ray, &isect, visibility)) {
+         scene_intersect_volume(kg, &volume_ray, &isect, visibility, state, DEVICE_KERNEL_INTEGRATOR_INTERSECT_VOLUME_STACK)) {
     shader_setup_from_ray(kg, stack_sd, &volume_ray, &isect);
     volume_stack_enter_exit(kg, state, stack_sd);
 
@@ -155,7 +155,7 @@ ccl_device void integrator_volume_stack_init(KernelGlobals kg, IntegratorState s
   while (stack_index < volume_stack_size - 1 && enclosed_index < MAX_VOLUME_STACK_SIZE - 1 &&
          step < 2 * volume_stack_size) {
     Intersection isect;
-    if (!scene_intersect_volume(kg, &volume_ray, &isect, visibility)) {
+    if (!scene_intersect_volume(kg, &volume_ray, &isect, visibility, state, DEVICE_KERNEL_INTEGRATOR_INTERSECT_VOLUME_STACK)) {
       break;
     }
 

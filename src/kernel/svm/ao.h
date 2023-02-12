@@ -70,15 +70,17 @@ ccl_device float svm_ao(
     ray.dD = differential_zero_compact();
 
     if (flags & NODE_AO_ONLY_LOCAL) {
-      if (!scene_intersect_local(kg, &ray, NULL, sd->object, NULL, 0)) {
-        unoccluded++;
-      }
+      printf("Feature disabled: %s\n", __PRETTY_FUNCTION__);
+      // if (!scene_intersect_local(kg, &ray, NULL, sd->object, NULL, 0)) {
+      //   unoccluded++;
+      // }
     }
     else {
       Intersection isect;
-      if (!scene_intersect(kg, &ray, PATH_RAY_SHADOW_OPAQUE, &isect)) {
-        unoccluded++;
-      }
+      // if (!scene_intersect(kg, &ray, PATH_RAY_SHADOW_OPAQUE, &isect)) {
+      //   unoccluded++;
+      // }
+      printf("Feature disabled: %s\n", __PRETTY_FUNCTION__);
     }
   }
 

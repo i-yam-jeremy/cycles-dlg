@@ -67,7 +67,10 @@ CCL_NAMESPACE_BEGIN
 ccl_device_intersect bool scene_intersect(KernelGlobals kg,
                                           ccl_private const Ray *ray,
                                           const uint visibility,
-                                          ccl_private Intersection *isect)
+                                          ccl_private Intersection *isect,
+                                          // For DLG ray stalling
+                                          IntegratorState state,
+                                          DeviceKernel current_kernel)
 {
   if (!intersection_ray_valid(ray)) {
     return false;
@@ -119,7 +122,10 @@ ccl_device_intersect bool scene_intersect_local(KernelGlobals kg,
                                                 ccl_private LocalIntersection *local_isect,
                                                 int local_object,
                                                 ccl_private uint *lcg_state,
-                                                int max_hits)
+                                                int max_hits,
+                                                // For DLG ray stalling
+                                                IntegratorState state,
+                                                DeviceKernel current_kernel)
 {
   if (!intersection_ray_valid(ray)) {
     if (local_isect) {
@@ -175,7 +181,9 @@ ccl_device_intersect bool scene_intersect_shadow_all(KernelGlobals kg,
                                                      uint visibility,
                                                      uint max_hits,
                                                      ccl_private uint *num_recorded_hits,
-                                                     ccl_private float *throughput)
+                                                     ccl_private float *throughput,
+                                                     // For DLG ray stalling
+                                                      DeviceKernel current_kernel)
 {
   if (!intersection_ray_valid(ray)) {
     *num_recorded_hits = 0;
@@ -233,7 +241,10 @@ ccl_device_intersect bool scene_intersect_shadow_all(KernelGlobals kg,
 ccl_device_intersect bool scene_intersect_volume(KernelGlobals kg,
                                                  ccl_private const Ray *ray,
                                                  ccl_private Intersection *isect,
-                                                 const uint visibility)
+                                                 const uint visibility,
+                                                 // For DLG ray stalling
+                                                IntegratorState state,
+                                                DeviceKernel current_kernel)
 {
   if (!intersection_ray_valid(ray)) {
     return false;

@@ -32,7 +32,7 @@ ccl_device bool integrate_intersect_shadow_opaque(KernelGlobals kg,
                                      PATH_RAY_SHADOW_OPAQUE;
 
   Intersection isect;
-  const bool opaque_hit = scene_intersect(kg, ray, visibility & opaque_mask, &isect);
+  const bool opaque_hit = scene_intersect(kg, ray, visibility & opaque_mask, &isect, (IntegratorState)state, DEVICE_KERNEL_INTEGRATOR_INTERSECT_SHADOW);
 
   if (!opaque_hit) {
     INTEGRATOR_STATE_WRITE(state, shadow_path, num_hits) = 0;
@@ -106,7 +106,7 @@ ccl_device bool integrate_intersect_shadow_transparent(KernelGlobals kg,
   uint num_hits = 0;
   float throughput = 1.0f;
   bool opaque_hit = scene_intersect_shadow_all(
-      kg, state, ray, visibility, max_hits, &num_hits, &throughput);
+      kg, state, ray, visibility, max_hits, &num_hits, &throughput, DEVICE_KERNEL_INTEGRATOR_INTERSECT_SHADOW);
 
   /* Computed throughput from baked shadow transparency, where we can bypass recording
    * intersections and shader evaluation. */

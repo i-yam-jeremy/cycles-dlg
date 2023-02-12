@@ -465,7 +465,10 @@ extern "C" __global__ void __intersection__point()
 ccl_device_intersect bool scene_intersect(KernelGlobals kg,
                                           ccl_private const Ray *ray,
                                           const uint visibility,
-                                          ccl_private Intersection *isect)
+                                          ccl_private Intersection *isect,
+                                          // For DLG ray stalling
+                                          IntegratorState state,
+                                          DeviceKernel current_kernel)
 {
   uint p0 = 0;
   uint p1 = 0;
@@ -475,6 +478,10 @@ ccl_device_intersect bool scene_intersect(KernelGlobals kg,
   uint p5 = PRIMITIVE_NONE;
   uint p6 = ((uint64_t)ray) & 0xFFFFFFFF;
   uint p7 = (((uint64_t)ray) >> 32) & 0xFFFFFFFF;
+  uint p8 = state;
+  uint p9 = current_kernel;
+
+  // TODO(jberchtold) add calls before starting render of m_geoDemandLoader->registerPathQueue(kernelEnumAsInt, int* path_queue, int* path_queue_size);
 
   uint ray_mask = visibility & 0xFF;
   uint ray_flags = OPTIX_RAY_FLAG_ENFORCE_ANYHIT;
@@ -503,7 +510,9 @@ ccl_device_intersect bool scene_intersect(KernelGlobals kg,
              p4,
              p5,
              p6,
-             p7);
+             p7,
+             p8,
+             p9);
 
   isect->t = __uint_as_float(p0);
   isect->u = __uint_as_float(p1);
@@ -513,6 +522,7 @@ ccl_device_intersect bool scene_intersect(KernelGlobals kg,
   isect->type = p5;
 
   return p5 != PRIMITIVE_NONE;
+  // TODO maybe just return primitive type == PRMITIVE_DLG so it stalls the ray?? But would be nice to also pass the path index and path queue ptr to the scene_intersect functions and then pass along in the payload
 }
 
 #ifdef __BVH_LOCAL__
@@ -521,7 +531,10 @@ ccl_device_intersect bool scene_intersect_local(KernelGlobals kg,
                                                 ccl_private LocalIntersection *local_isect,
                                                 int local_object,
                                                 ccl_private uint *lcg_state,
-                                                int max_hits)
+                                                int max_hits,
+                                                // For DLG ray stalling
+                                                IntegratorState state,
+                                                DeviceKernel current_kernel)
 {
   uint p0 = pointer_pack_to_uint_0(lcg_state);
   uint p1 = pointer_pack_to_uint_1(lcg_state);
@@ -530,6 +543,8 @@ ccl_device_intersect bool scene_intersect_local(KernelGlobals kg,
   uint p4 = local_object;
   uint p6 = ((uint64_t)ray) & 0xFFFFFFFF;
   uint p7 = (((uint64_t)ray) >> 32) & 0xFFFFFFFF;
+  uint p8 = state;
+  uint p9 = current_kernel;
 
   /* Is set to zero on miss or if ray is aborted, so can be used as return value. */
   uint p5 = max_hits;
@@ -556,7 +571,9 @@ ccl_device_intersect bool scene_intersect_local(KernelGlobals kg,
              p4,
              p5,
              p6,
-             p7);
+             p7,
+             p8,
+             p9);
 
   return p5;
 }
@@ -569,7 +586,9 @@ ccl_device_intersect bool scene_intersect_shadow_all(KernelGlobals kg,
                                                      uint visibility,
                                                      uint max_hits,
                                                      ccl_private uint *num_recorded_hits,
-                                                     ccl_private float *throughput)
+                                                     ccl_private float *throughput,
+                                                     // For DLG ray stalling
+                                                      DeviceKernel current_kernel)
 {
   uint p0 = state;
   uint p1 = __float_as_uint(1.0f); /* Throughput. */
@@ -579,6 +598,8 @@ ccl_device_intersect bool scene_intersect_shadow_all(KernelGlobals kg,
   uint p5 = false;
   uint p6 = ((uint64_t)ray) & 0xFFFFFFFF;
   uint p7 = (((uint64_t)ray) >> 32) & 0xFFFFFFFF;
+  uint p8 = state;
+  uint p9 = current_kernel;
 
   uint ray_mask = visibility & 0xFF;
   if (0 == ray_mask && (visibility & ~0xFF) != 0) {
@@ -604,7 +625,9 @@ ccl_device_intersect bool scene_intersect_shadow_all(KernelGlobals kg,
              p4,
              p5,
              p6,
-             p7);
+             p7,
+             p8,
+             p9);
 
   *num_recorded_hits = uint16_unpack_from_uint_0(p2);
   *throughput = __uint_as_float(p1);
@@ -617,7 +640,10 @@ ccl_device_intersect bool scene_intersect_shadow_all(KernelGlobals kg,
 ccl_device_intersect bool scene_intersect_volume(KernelGlobals kg,
                                                  ccl_private const Ray *ray,
                                                  ccl_private Intersection *isect,
-                                                 const uint visibility)
+                                                 const uint visibility,
+                                                 // For DLG ray stalling
+                                                IntegratorState state,
+                                                DeviceKernel current_kernel)
 {
   uint p0 = 0;
   uint p1 = 0;
@@ -627,6 +653,8 @@ ccl_device_intersect bool scene_intersect_volume(KernelGlobals kg,
   uint p5 = PRIMITIVE_NONE;
   uint p6 = ((uint64_t)ray) & 0xFFFFFFFF;
   uint p7 = (((uint64_t)ray) >> 32) & 0xFFFFFFFF;
+  uint p8 = state;
+  uint p9 = current_kernel;
 
   uint ray_mask = visibility & 0xFF;
   if (0 == ray_mask && (visibility & ~0xFF) != 0) {
@@ -652,7 +680,9 @@ ccl_device_intersect bool scene_intersect_volume(KernelGlobals kg,
              p4,
              p5,
              p6,
-             p7);
+             p7,
+             p8,
+             p9);
 
   isect->t = __uint_as_float(p0);
   isect->u = __uint_as_float(p1);

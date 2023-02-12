@@ -99,7 +99,7 @@ ccl_device_inline bool subsurface_disk(KernelGlobals kg,
       rng_state.rng_hash, rng_state.rng_offset, rng_state.sample, 0x68bc21eb);
   const int max_hits = BSSRDF_MAX_HITS;
 
-  scene_intersect_local(kg, &ray, &ss_isect, object, &lcg_state, max_hits);
+  scene_intersect_local(kg, &ray, &ss_isect, object, &lcg_state, max_hits, state, DEVICE_KERNEL_INTEGRATOR_SHADE_SURFACE_RAYTRACE);
   const int num_eval_hits = min(ss_isect.num_hits, max_hits);
   if (num_eval_hits == 0) {
     return false;

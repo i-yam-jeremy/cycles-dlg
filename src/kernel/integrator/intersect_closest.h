@@ -353,7 +353,7 @@ ccl_device void integrator_intersect_closest(KernelGlobals kg,
   ray.self.prim = last_isect_prim;
   ray.self.light_object = OBJECT_NONE;
   ray.self.light_prim = PRIM_NONE;
-  bool hit = scene_intersect(kg, &ray, visibility, &isect);
+  bool hit = scene_intersect(kg, &ray, visibility, &isect, state, DEVICE_KERNEL_INTEGRATOR_INTERSECT_CLOSEST);
 
   /* TODO: remove this and do it in the various intersection functions instead. */
   if (!hit) {

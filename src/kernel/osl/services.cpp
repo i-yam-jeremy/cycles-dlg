@@ -1654,7 +1654,8 @@ bool OSLRenderServices::trace(TraceOpt &options,
 
   /* Ray-trace, leaving out shadow opaque to avoid early exit. */
   uint visibility = PATH_RAY_ALL_VISIBILITY - PATH_RAY_SHADOW_OPAQUE;
-  tracedata->hit = scene_intersect(kg, &ray, visibility, &tracedata->isect);
+  // tracedata->hit = scene_intersect(kg, &ray, visibility, &tracedata->isect);
+  printf("Feature disabled: %s\n", __PRETTY_FUNCTION__);
   return tracedata->hit;
 }
 

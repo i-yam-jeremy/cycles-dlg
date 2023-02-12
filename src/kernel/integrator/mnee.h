@@ -440,7 +440,10 @@ ccl_device_forceinline bool mnee_newton_solver(KernelGlobals kg,
                                                ccl_private ShaderData *sd_vtx,
                                                ccl_private const LightSample *ls,
                                                int vertex_count,
-                                               ccl_private ManifoldVertex *vertices)
+                                               ccl_private ManifoldVertex *vertices,
+                                               // For DLG ray stalling
+                                              IntegratorState state,
+                                              DeviceKernel current_kernel)
 {
   float2 dx[MNEE_MAX_CAUSTIC_CASTERS];
   ManifoldVertex tentative[MNEE_MAX_CAUSTIC_CASTERS];
@@ -519,7 +522,7 @@ ccl_device_forceinline bool mnee_newton_solver(KernelGlobals kg,
 
       bool projection_success = false;
       for (int isect_count = 0; isect_count < MNEE_MAX_INTERSECTION_COUNT; isect_count++) {
-        bool hit = scene_intersect(kg, &projection_ray, PATH_RAY_TRANSMIT, &projection_isect);
+        bool hit = scene_intersect(kg, &projection_ray, PATH_RAY_TRANSMIT, &projection_isect, state, current_kernel);
         if (!hit)
           break;
 
@@ -883,7 +886,7 @@ ccl_device_forceinline bool mnee_path_contribution(KernelGlobals kg,
 
     /* Check visibility. */
     probe_ray.D = normalize_len(v.p - probe_ray.P, &probe_ray.tmax);
-    if (scene_intersect(kg, &probe_ray, PATH_RAY_TRANSMIT, &probe_isect)) {
+    if (scene_intersect(kg, &probe_ray, PATH_RAY_TRANSMIT, &probe_isect, state, DEVICE_KERNEL_INTEGRATOR_SHADE_SURFACE_MNEE)) {
       int hit_object = (probe_isect.object == OBJECT_NONE) ?
                            kernel_data_fetch(prim_object, probe_isect.prim) :
                            probe_isect.object;
@@ -987,7 +990,7 @@ ccl_device_forceinline int kernel_path_mnee_sample(KernelGlobals kg,
 
   int vertex_count = 0;
   for (int isect_count = 0; isect_count < MNEE_MAX_INTERSECTION_COUNT; isect_count++) {
-    bool hit = scene_intersect(kg, &probe_ray, PATH_RAY_TRANSMIT, &probe_isect);
+    bool hit = scene_intersect(kg, &probe_ray, PATH_RAY_TRANSMIT, &probe_isect, state, DEVICE_KERNEL_INTEGRATOR_SHADE_SURFACE_MNEE);
     if (!hit)
       break;
 
@@ -1092,7 +1095,7 @@ ccl_device_forceinline int kernel_path_mnee_sample(KernelGlobals kg,
   /* 2. Walk on the specular manifold to find vertices on the
    *    casters that satisfy snell's law for each interface
    */
-  if (mnee_newton_solver(kg, sd, sd_mnee, ls, vertex_count, vertices)) {
+  if (mnee_newton_solver(kg, sd, sd_mnee, ls, vertex_count, vertices, state, DEVICE_KERNEL_INTEGRATOR_SHADE_SURFACE_MNEE)) {
     /* 3. If a solution exists, calculate contribution of the corresponding path */
     if (!mnee_path_contribution(kg, state, sd, sd_mnee, ls, vertex_count, vertices, throughput))
       return 0;

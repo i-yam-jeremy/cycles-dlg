@@ -298,7 +298,7 @@ OptiXDevice::OptiXDevice(const DeviceInfo &info, Stats &stats, Profiler &profile
       .maxPartitionInstanceCount = 1000000,
       .maxMemory = 33 * GB,
       .maxActiveRayCount =
-          1024 /* * 512*/ /* * 8 * 8*/,  // TODO (jberchtold) set actual upper bound here
+          1024  * 512  * 8 * 8,  // TODO (jberchtold) set actual upper bound here
       .greedyLoading = false,
       .instancePartitionerType = InstancePartitionerType::OCTREE};
   m_geoDemandLoader = std::shared_ptr<demandLoadingGeometry::GeometryDemandLoader>(
@@ -484,7 +484,7 @@ bool OptiXDevice::load_kernels(const uint kernel_features)
   /* Default to no motion blur and two-level graph, since it is the fastest option. */
   pipeline_options.usesMotionBlur = false;
   pipeline_options.traversableGraphFlags = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_ANY;
-  pipeline_options.numPayloadValues = 8;
+  pipeline_options.numPayloadValues = 8 + 2/*for DLG ray stalling*/;
   pipeline_options.numAttributeValues = 2; /* u, v */
   pipeline_options.exceptionFlags = OPTIX_EXCEPTION_FLAG_NONE;
   pipeline_options.pipelineLaunchParamsVariableName = "kernel_params"; /* See globals.h */
