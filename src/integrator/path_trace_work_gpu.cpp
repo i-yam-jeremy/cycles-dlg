@@ -462,6 +462,7 @@ void PathTraceWorkGPU::enqueue_path_iteration(DeviceKernel kernel, const int num
     if (kernel_is_shadow_path(kernel)) {
       /* Compute array of active shadow paths for specific kernel. */
       compute_queued_paths(DEVICE_KERNEL_INTEGRATOR_QUEUED_SHADOW_PATHS_ARRAY, kernel);
+      // TODO(jberchtold) check here to see how path queues are computed / stored and how they would be resumed?? Maybe I just need to increment the queue size and set the path state queued kernel attribute accordingly?? Idk, need to make sure stalled paths arent counted in this compute part either
     }
     else {
       /* Compute array of active paths for specific kernel. */

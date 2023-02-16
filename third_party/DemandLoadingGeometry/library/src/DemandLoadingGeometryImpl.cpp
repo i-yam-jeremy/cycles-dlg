@@ -13,8 +13,10 @@ GeometryDemandLoaderImpl::GeometryDemandLoaderImpl(
     std::unique_ptr<glow::pipeline::sceneloader::partition::InstancePartitioner>
         instancePartitioner,
     const Options &options,
+    CUcontext cuContext,
     OptixDeviceContext optixContext)
-    : m_instancePartitioner(std::move(instancePartitioner)),
+    : m_cuContext(cuContext),
+      m_instancePartitioner(std::move(instancePartitioner)),
       m_options(options),
       m_optixManager(std::make_shared<glow::optix::OptixManager>(
           std::make_shared<glow::optix::OptixConnector>(), optixContext))
@@ -213,7 +215,7 @@ demandLoadingGeometry::LaunchData GeometryDemandLoaderImpl::preLaunch(
   std::vector<internal::RayCount> assetCounts(m_assetRayCounts->size() /
                                               sizeof(internal::RayCount));
   m_assetRayCounts->read(assetCounts.data(), stream);
-  std::cout << "Asset Counts: " << assetCounts.size() << std::endl;
+  std::cout << "Assets: " << assetCounts.size() << std::endl;
 
   // // 3. CPU calculation of asset priorities
   std::vector<bool> previousIterAssetResidencies(m_chunkAssets.size());
@@ -354,7 +356,7 @@ void GeometryDemandLoaderImpl::updateAssetCache()
   const auto memoryUsedByOtherComponentsLikeAssetIdBuffer = 0;  // TODO(jberchtold);
   const auto maxCacheMemory = m_options.maxMemory - memoryUsedByOtherComponentsLikeAssetIdBuffer;
   m_assetCache = std::make_shared<AssetCache>(
-      maxCacheMemory, 0, m_chunks.size(), &m_assets, m_optixManager);
+      maxCacheMemory, 0, m_chunks.size(), &m_assets, m_optixManager, m_cuContext);
 }
 
 }  // namespace demandLoadingGeometry

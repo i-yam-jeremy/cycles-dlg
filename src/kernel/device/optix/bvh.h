@@ -53,7 +53,7 @@ extern "C" __global__ void __miss__kernel_optix_miss()
 
 extern "C" __global__ void __anyhit__kernel_optix_local_hit()
 {
-  printf("Func: %s\n", __PRETTY_FUNCTION__);
+  // printf("Func: %s\n", __PRETTY_FUNCTION__);
 #if defined(__HAIR__) || defined(__POINTCLOUD__)
   if (!optixIsTriangleHit()) {
     /* Ignore curves and points. */
@@ -136,7 +136,7 @@ extern "C" __global__ void __anyhit__kernel_optix_local_hit()
 
 extern "C" __global__ void __anyhit__kernel_optix_shadow_all_hit()
 {
-  printf("Func: %s\n", __PRETTY_FUNCTION__);
+  // printf("Func: %s\n", __PRETTY_FUNCTION__);
 #ifdef __SHADOW_RECORD_ALL__
   int prim = optixGetPrimitiveIndex();
   const uint object = get_object_id();
@@ -266,7 +266,7 @@ extern "C" __global__ void __anyhit__kernel_optix_shadow_all_hit()
 
 extern "C" __global__ void __anyhit__kernel_optix_volume_test()
 {
-  printf("Func: %s\n", __PRETTY_FUNCTION__);
+  // printf("Func: %s\n", __PRETTY_FUNCTION__);
 #if defined(__HAIR__) || defined(__POINTCLOUD__)
   if (!optixIsTriangleHit()) {
     /* Ignore curves. */
@@ -295,7 +295,7 @@ extern "C" __global__ void __anyhit__kernel_optix_volume_test()
 
 extern "C" __global__ void __anyhit__kernel_optix_visibility_test()
 {
-  printf("Func: %s\n", __PRETTY_FUNCTION__);
+  // printf("Func: %s\n", __PRETTY_FUNCTION__);
 #ifdef __HAIR__
 #  if OPTIX_ABI_VERSION < 55
   if (optixGetPrimitiveType() == OPTIX_PRIMITIVE_TYPE_ROUND_CUBIC_BSPLINE) {
@@ -347,7 +347,7 @@ extern "C" __global__ void __anyhit__kernel_optix_visibility_test()
 
 extern "C" __global__ void __closesthit__kernel_optix_hit()
 {
-  printf("Func: %s\n", __PRETTY_FUNCTION__);
+  // printf("Func: %s\n", __PRETTY_FUNCTION__);
   const int object = get_object_id();
   const int prim = optixGetPrimitiveIndex();
 
@@ -404,7 +404,7 @@ ccl_device_inline void optix_intersection_curve(const int prim, const int type)
   isect.t = optixGetRayTmax();
 
   if (curve_intersect(NULL, &isect, ray_P, ray_D, ray_tmin, isect.t, object, prim, time, type)) {
-    static_assert(PRIMITIVE_ALL < 128, "Values >= 128 are reserved for OptiX internal use");
+    static_assert(PRIMITIVE_ALL < 256, "Values >= 256 are reserved for OptiX internal use");
     optixReportIntersection(isect.t,
                             type & PRIMITIVE_ALL,
                             __float_as_int(isect.u),  /* Attribute_0 */
@@ -414,7 +414,7 @@ ccl_device_inline void optix_intersection_curve(const int prim, const int type)
 
 extern "C" __global__ void __intersection__curve_ribbon()
 {
-  printf("Func: %s\n", __PRETTY_FUNCTION__);
+  // printf("Func: %s\n", __PRETTY_FUNCTION__);
   const KernelCurveSegment segment = kernel_data_fetch(curve_segments, optixGetPrimitiveIndex());
   const int prim = segment.prim;
   const int type = segment.type;
@@ -428,7 +428,7 @@ extern "C" __global__ void __intersection__curve_ribbon()
 #ifdef __POINTCLOUD__
 extern "C" __global__ void __intersection__point()
 {
-  printf("Func: %s\n", __PRETTY_FUNCTION__);
+  // printf("Func: %s\n", __PRETTY_FUNCTION__);
   const int prim = optixGetPrimitiveIndex();
   const int object = get_object_id();
   const int type = kernel_data_fetch(objects, object).primitive_type;
@@ -454,7 +454,7 @@ extern "C" __global__ void __intersection__point()
   isect.t = optixGetRayTmax();
 
   if (point_intersect(NULL, &isect, ray_P, ray_D, ray_tmin, isect.t, object, prim, time, type)) {
-    static_assert(PRIMITIVE_ALL < 128, "Values >= 128 are reserved for OptiX internal use");
+    static_assert(PRIMITIVE_ALL < 256, "Values >= 256 are reserved for OptiX internal use");
     optixReportIntersection(isect.t, type & PRIMITIVE_ALL);
   }
 }
@@ -481,7 +481,7 @@ ccl_device_intersect bool scene_intersect(KernelGlobals kg,
   uint p8 = state;
   uint p9 = current_kernel;
 
-  // TODO(jberchtold) add calls before starting render of m_geoDemandLoader->registerPathQueue(kernelEnumAsInt, int* path_queue, int* path_queue_size);
+  // TODO(jberchtold) add call before starting render of m_geoDemandLoader->registerPathQueues(int** path_queues, int** path_queue_sizes); which has params that are two arrays, indexed by DeviceKernel enum
 
   uint ray_mask = visibility & 0xFF;
   uint ray_flags = OPTIX_RAY_FLAG_ENFORCE_ANYHIT;
@@ -522,7 +522,6 @@ ccl_device_intersect bool scene_intersect(KernelGlobals kg,
   isect->type = p5;
 
   return p5 != PRIMITIVE_NONE;
-  // TODO maybe just return primitive type == PRMITIVE_DLG so it stalls the ray?? But would be nice to also pass the path index and path queue ptr to the scene_intersect functions and then pass along in the payload
 }
 
 #ifdef __BVH_LOCAL__

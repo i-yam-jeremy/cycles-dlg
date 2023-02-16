@@ -355,6 +355,12 @@ ccl_device void integrator_intersect_closest(KernelGlobals kg,
   ray.self.light_prim = PRIM_NONE;
   bool hit = scene_intersect(kg, &ray, visibility, &isect, state, DEVICE_KERNEL_INTEGRATOR_INTERSECT_CLOSEST);
 
+  if (isect.type == PRIMITIVE_DLG) {
+    ray.tmin = isect.t;
+    // TOOD(jerchtold) Just return early and keep path in the queue (until stalling is fully enabled)
+    return;
+  }
+
   /* TODO: remove this and do it in the various intersection functions instead. */
   if (!hit) {
     isect.prim = PRIM_NONE;

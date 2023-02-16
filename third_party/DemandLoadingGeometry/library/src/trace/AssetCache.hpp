@@ -9,6 +9,7 @@
 #include <thread>
 #include <util/monad/error.h>
 #include <util/monad/result.h>
+#include <cuda.h>
 
 namespace demandLoadingGeometry {
 class AssetCache {
@@ -17,7 +18,8 @@ public:
              int chunkAssetIdStart,
              int meshAssetIndexStart,
              std::vector<std::shared_ptr<glow::pipeline::render::IAsset>> *assets,
-             std::shared_ptr<glow::optix::OptixManager> geometryOptixManager);
+             std::shared_ptr<glow::optix::OptixManager> geometryOptixManager,
+             CUcontext cuContext);
 
   void startThread();
   void stopThread();
@@ -64,6 +66,8 @@ private:
   std::mutex m_assetEntriesMutex;
   AssetLoadRequest m_queuedAssetRequest;
   std::mutex m_queuedAssetRequestMutex;
+
+  CUcontext m_cuContext{};
 
   std::mutex m_freeingAssetsMutex; // Mutex for freeing assets (locked so asset builder thread can't free assets when main trace thread is running and using them)
 

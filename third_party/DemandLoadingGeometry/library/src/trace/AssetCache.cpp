@@ -7,14 +7,16 @@ AssetCache::AssetCache(size_t maxMemoryUsage,
                        int chunkAssetIdStart,
                        int meshAssetIndexStart,
                        std::vector<std::shared_ptr<glow::pipeline::render::IAsset>> *assets,
-                       std::shared_ptr<glow::optix::OptixManager> geometryOptixManager)
+                       std::shared_ptr<glow::optix::OptixManager> geometryOptixManager,
+                       CUcontext cuContext)
     : useCounts(assets->size()),
       maxMemoryUsage(maxMemoryUsage),
       chunkAssetIdStart(chunkAssetIdStart),
       m_meshAssetIndexStart(meshAssetIndexStart),
       assets(assets),
       geometryOptixManager(geometryOptixManager),
-      m_assetEntries(assets->size())
+      m_assetEntries(assets->size()),
+      m_cuContext(cuContext)
 {
   memset(useCounts.data(), 0, sizeof(useCounts[0]) * useCounts.size());
 }
@@ -22,6 +24,8 @@ AssetCache::AssetCache(size_t maxMemoryUsage,
 void AssetCache::startThread()
 {
   m_thread = std::thread([this]() {
+    cuCtxPushCurrent(m_cuContext);
+
     cudaStream_t stream;
     CUDA_CHECK(cudaStreamCreate(&stream));
     while (m_threadActive) {
@@ -45,6 +49,7 @@ void AssetCache::startThread()
     }
 
     CUDA_CHECK(cudaStreamDestroy(stream));
+    cuCtxPopCurrent(NULL);
   });
 }
 

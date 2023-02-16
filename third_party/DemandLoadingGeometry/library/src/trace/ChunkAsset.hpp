@@ -6,7 +6,7 @@
 namespace demandLoadingGeometry {
 class ChunkAsset : public glow::pipeline::render::IAsset {
 public:
-  ChunkAsset(const Chunk *chunk, const std::vector<std::shared_ptr<glow::pipeline::render::IAsset>> &assets) : chunk(chunk), sbtOffset(sbtOffset), assets(assets) {
+  ChunkAsset(const Chunk *chunk, const std::vector<std::shared_ptr<glow::pipeline::render::IAsset>> &assets) : chunk(chunk), assets(assets) {
     this->instanceCount = 0;
     for (auto &entry : this->chunk->instanceLists) {
       this->instanceCount += entry.instanceXforms.size();
@@ -84,7 +84,6 @@ public:
 
 private:
   const Chunk *chunk;
-  int sbtOffset = -1;
   size_t instanceCount = 0;
   const std::vector<std::shared_ptr<glow::pipeline::render::IAsset>> &assets;
 

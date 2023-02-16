@@ -39,6 +39,8 @@ CCL_NAMESPACE_BEGIN
 // The original code is Copyright NVIDIA Corporation, BSD-3-Clause.
 namespace {
 
+static_assert(DLG_CYCLES_PRIM_TYPE == PRIMITIVE_DLG, "DLG macro must match the cycles prim type");
+
 #  if OPTIX_ABI_VERSION >= 60
 using ::optixUtilDenoiserInvokeTiled;
 #  else
@@ -302,7 +304,7 @@ OptiXDevice::OptiXDevice(const DeviceInfo &info, Stats &stats, Profiler &profile
       .greedyLoading = false,
       .instancePartitionerType = InstancePartitionerType::OCTREE};
   m_geoDemandLoader = std::shared_ptr<demandLoadingGeometry::GeometryDemandLoader>(
-      demandLoadingGeometry::createDemandLoader(dlgOptions, context));
+      demandLoadingGeometry::createDemandLoader(dlgOptions, cuContext, context));
 
   /* Fix weird compiler bug that assigns wrong size. */
   launch_params.data_elements = sizeof(KernelParamsOptiX);
@@ -833,7 +835,7 @@ bool OptiXDevice::load_kernels(const uint kernel_features)
 
     /* Set stack size depending on pipeline options. */
     optix_assert(
-        optixPipelineSetStackSize(pipelines[PIP_SHADE_MNEE], 0, dss, css, motion_blur ? 3 : 2));
+        optixPipelineSetStackSize(pipelines[PIP_SHADE_MNEE], 0, dss, css, motion_blur ? 5 : 4));
   }
 
   { /* Create intersection-only pipeline. */
@@ -879,7 +881,7 @@ bool OptiXDevice::load_kernels(const uint kernel_features)
         link_options.maxTraceDepth * trace_css;
 
     optix_assert(
-        optixPipelineSetStackSize(pipelines[PIP_INTERSECT], 0, 0, css, motion_blur ? 3 : 2));
+        optixPipelineSetStackSize(pipelines[PIP_INTERSECT], 0, 0, css, motion_blur ? 5 : 4));
   }
 
   /* Clean up program group objects. */
@@ -1824,70 +1826,6 @@ void OptiXDevice::build_bvh(BVH *bvh, Progress &progress, bool refit)
       // TODO(jberchtold) idk if this does anything
       bvh_optix->as_data->alloc_to_device(1);
       bvh_optix->traversable_handle = 0;
-
-      {
-        const size_t num_verts = mesh->get_verts().size();
-
-        size_t num_motion_steps = 1;
-        Attribute *motion_keys = mesh->attributes.find(ATTR_STD_MOTION_VERTEX_POSITION);
-        if (motion_blur && mesh->get_use_motion_blur() && motion_keys) {
-          num_motion_steps = mesh->get_motion_steps();
-        }
-
-        device_vector<int> index_data(this, "optix temp index data", MEM_READ_ONLY);
-        index_data.alloc(mesh->get_triangles().size());
-        memcpy(index_data.data(),
-               mesh->get_triangles().data(),
-               mesh->get_triangles().size() * sizeof(int));
-        device_vector<float4> vertex_data(this, "optix temp vertex data", MEM_READ_ONLY);
-        vertex_data.alloc(num_verts * num_motion_steps);
-
-        for (size_t step = 0; step < num_motion_steps; ++step) {
-          const float3 *verts = mesh->get_verts().data();
-
-          size_t center_step = (num_motion_steps - 1) / 2;
-          /* The center step for motion vertices is not stored in the attribute. */
-          if (step != center_step) {
-            verts = motion_keys->data_float3() +
-                    (step > center_step ? step - 1 : step) * num_verts;
-          }
-
-          memcpy(vertex_data.data() + num_verts * step, verts, num_verts * sizeof(float3));
-        }
-
-        /* Upload triangle data to GPU. */
-        index_data.copy_to_device();
-        vertex_data.copy_to_device();
-
-        vector<device_ptr> vertex_ptrs;
-        vertex_ptrs.reserve(num_motion_steps);
-        for (size_t step = 0; step < num_motion_steps; ++step) {
-          vertex_ptrs.push_back(vertex_data.device_pointer + num_verts * step * sizeof(float3));
-        }
-
-        /* Force a single any-hit call, so shadow record-all behavior works correctly. */
-        unsigned int build_flags = OPTIX_GEOMETRY_FLAG_REQUIRE_SINGLE_ANYHIT_CALL;
-        OptixBuildInput build_input = {};
-        build_input.type = OPTIX_BUILD_INPUT_TYPE_TRIANGLES;
-        build_input.triangleArray.vertexBuffers = (CUdeviceptr *)vertex_ptrs.data();
-        build_input.triangleArray.numVertices = num_verts;
-        build_input.triangleArray.vertexFormat = OPTIX_VERTEX_FORMAT_FLOAT3;
-        build_input.triangleArray.vertexStrideInBytes = sizeof(float4);
-        build_input.triangleArray.indexBuffer = index_data.device_pointer;
-        build_input.triangleArray.numIndexTriplets = mesh->num_triangles();
-        build_input.triangleArray.indexFormat = OPTIX_INDICES_FORMAT_UNSIGNED_INT3;
-        build_input.triangleArray.indexStrideInBytes = 3 * sizeof(int);
-        build_input.triangleArray.flags = &build_flags;
-        /* The SBT does not store per primitive data since Cycles already allocates separate
-         * buffers for that purpose. OptiX does not allow this to be zero though, so just pass in
-         * one and rely on that having the same meaning in this case. */
-        build_input.triangleArray.numSbtRecords = 1;
-        build_input.triangleArray.primitiveIndexOffset = mesh->prim_offset;
-
-        if (!build_optix_bvh(bvh_optix, operation, build_input, num_motion_steps)) {
-          progress.set_error("Failed to build OptiX acceleration structure");
-        }
-      }
     }
     else if (geom->geometry_type == Geometry::POINTCLOUD) {
       /* Build BLAS for points primitives. */

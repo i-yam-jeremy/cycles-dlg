@@ -7,6 +7,7 @@
 #include <sharedtypes/chunk.h>
 #include <trace/AssetCache.hpp>
 #include <trace/optixmanager.h>
+#include <cuda.h>
 
 namespace demandLoadingGeometry {
 
@@ -16,6 +17,7 @@ class GeometryDemandLoaderImpl {
       std::unique_ptr<glow::pipeline::sceneloader::partition::InstancePartitioner>
           instancePartitioner,
       const Options &options,
+      CUcontext cuContext,
       OptixDeviceContext context);
   ~GeometryDemandLoaderImpl();
 
@@ -39,6 +41,7 @@ class GeometryDemandLoaderImpl {
   void postLaunch(cudaStream_t stream);
 
  private:
+  CUcontext m_cuContext{};
   GeometryDeviceContext m_deviceContext;
   std::unique_ptr<glow::pipeline::sceneloader::partition::InstancePartitioner>
       m_instancePartitioner = nullptr;

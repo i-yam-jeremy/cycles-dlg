@@ -26,10 +26,10 @@ SBTBuffer::~SBTBuffer()
   delete[] reinterpret_cast<char *>(data);
 }
 
-GeometryDemandLoader *createDemandLoader(Options &options, OptixDeviceContext optixContext)
+GeometryDemandLoader *createDemandLoader(Options &options, CUcontext cuContext, OptixDeviceContext optixContext)
 {
   auto instancePartitioner = createInstancePartitioner(options.instancePartitionerType);
-  auto impl = new GeometryDemandLoaderImpl(std::move(instancePartitioner), options, optixContext);
+  auto impl = new GeometryDemandLoaderImpl(std::move(instancePartitioner), options, cuContext, optixContext);
   auto geoDemandLoader = new GeometryDemandLoader(impl);
   return geoDemandLoader;
 }

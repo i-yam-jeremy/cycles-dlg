@@ -13,6 +13,7 @@
 #include <string>
 #include <tuple>
 #include <vector>
+#include <cuda.h>
 
 // Temporary (while refactoring is in progress)
 enum class InstancePartitionerType {
@@ -20,6 +21,8 @@ enum class InstancePartitionerType {
   KDTREE,
 };
 // End Temporary
+
+#define DLG_CYCLES_PRIM_TYPE (1 << 6)
 
 namespace demandLoadingGeometry {
 
@@ -68,7 +71,7 @@ struct Options {
   InstancePartitionerType instancePartitionerType;
 };
 
-GeometryDemandLoader *createDemandLoader(Options &options, OptixDeviceContext optixContext);
+GeometryDemandLoader *createDemandLoader(Options &options, CUcontext cuContext, OptixDeviceContext optixContext);
 
 struct SBTBuffer {
   ~SBTBuffer();
@@ -91,6 +94,9 @@ class GeometryDemandLoader {
   std::optional<OptixProgramGroupDesc> getOptixProgramGroup(
       const OptixPipelineCompileOptions &pipeline_compile_options,
       const OptixModuleCompileOptions &module_compile_options);
+  
+  // Register path queues to resume stalled rays
+  void registerPathQueues(int** d_pathQueues, int** d_pathQueueSizes);
 
   // Scene Building API
   // void reserveSpaceForNewInstances(size_t instanceCount);
@@ -108,6 +114,7 @@ class GeometryDemandLoader {
 
  private:
   friend GeometryDemandLoader *createDemandLoader(Options &options,
+                                                  CUcontext cuContext, 
                                                   OptixDeviceContext optixContext);
   GeometryDemandLoader(GeometryDemandLoaderImpl *impl);
 
