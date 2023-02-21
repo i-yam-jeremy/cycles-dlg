@@ -77,6 +77,7 @@ void HdCyclesFileReader::read(Session *session, const char *filepath, const bool
 
   /* Create render index and scene delegate. */
   unique_ptr<HdRenderIndex> render_index(HdRenderIndex::New(&render_delegate, {}));
+  std::cout << root_path << ", " << filepath << std::endl;
   unique_ptr<UsdImagingDelegate> scene_delegate = make_unique<UsdImagingDelegate>(
       render_index.get(), root_path);
 
