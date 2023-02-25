@@ -1,0 +1,913 @@
+Func: UsdGeomBoundable
+Func: TfType
+Func: TfDebug
+LIBRARY: usdGeom, TfType
+Func: UsdGeomBoundable
+Func: TfType
+Func: TfDebug
+LIBRARY: usdGeom, UsdGeomBoundable
+Func: UsdGeomBoundable
+Func: TfType
+Func: TfDebug
+LIBRARY: usdGeom, TfType
+Func: UsdGeomBoundable
+Func: TfType
+Func: TfDebug
+LIBRARY: usdGeom, UsdGeomBoundable
+Func: UsdGeomBoundable
+Func: TfType
+Func: TfDebug
+LIBRARY: usdGeom, TfType
+Func: UsdGeomBoundable
+Func: TfType
+Func: TfDebug
+LIBRARY: usdGeom, Tf_EnvSettingRegistry
+Func: UsdGeomBoundable
+Func: TfType
+Func: TfDebug
+LIBRARY: usdGeom, TfEnum
+Func: UsdGeomBoundable
+Func: Tf_EnvSettingRegistry
+Func: TfType
+Func: TfDebug
+LIBRARY: usdGeom, UsdGeomBoundable
+Func: TfEnum
+Func: UsdGeomBoundable
+Func: Tf_EnvSettingRegistry
+Func: TfType
+Func: TfDebug
+LIBRARY: usdGeom, TfType
+Func: TfEnum
+Func: UsdGeomBoundable
+Func: Tf_EnvSettingRegistry
+Func: TfType
+Func: TfDebug
+LIBRARY: usdGeom, UsdGeomBoundable
+Func: TfEnum
+Func: UsdGeomBoundable
+Func: Tf_EnvSettingRegistry
+Func: TfType
+Func: TfDebug
+LIBRARY: usdGeom, TfType
+Func: TfEnum
+Func: UsdGeomBoundable
+Func: Tf_EnvSettingRegistry
+Func: TfType
+Func: TfDebug
+LIBRARY: usdGeom, TfType
+Func: TfEnum
+Func: UsdGeomBoundable
+Func: Tf_EnvSettingRegistry
+Func: TfType
+Func: TfDebug
+LIBRARY: usdGeom, TfType
+Func: TfEnum
+Func: UsdGeomBoundable
+Func: Tf_EnvSettingRegistry
+Func: TfType
+Func: TfDebug
+LIBRARY: usdGeom, UsdGeomBoundable
+Func: TfEnum
+Func: UsdGeomBoundable
+Func: Tf_EnvSettingRegistry
+Func: TfType
+Func: TfDebug
+LIBRARY: usdGeom, TfType
+Func: TfEnum
+Func: UsdGeomBoundable
+Func: Tf_EnvSettingRegistry
+Func: TfType
+Func: TfDebug
+LIBRARY: usdGeom, TfType
+Func: TfEnum
+Func: UsdGeomBoundable
+Func: Tf_EnvSettingRegistry
+Func: TfType
+Func: TfDebug
+LIBRARY: usdGeom, TfType
+Func: TfEnum
+Func: UsdGeomBoundable
+Func: Tf_EnvSettingRegistry
+Func: TfType
+Func: TfDebug
+LIBRARY: usdGeom, TfType
+Func: TfEnum
+Func: UsdGeomBoundable
+Func: Tf_EnvSettingRegistry
+Func: TfType
+Func: TfDebug
+LIBRARY: usdGeom, TfEnum
+Func: TfEnum
+Func: UsdGeomBoundable
+Func: Tf_EnvSettingRegistry
+Func: TfType
+Func: TfDebug
+LIBRARY: usdGeom, TfType
+Func: TfEnum
+Func: UsdGeomBoundable
+Func: Tf_EnvSettingRegistry
+Func: TfType
+Func: TfDebug
+LIBRARY: usdGeom, TfEnum
+Func: TfEnum
+Func: UsdGeomBoundable
+Func: Tf_EnvSettingRegistry
+Func: TfType
+Func: TfDebug
+LIBRARY: usdVol, TfType
+LIBRARY: usdVol, TfType
+Func: TfType
+LIBRARY: usdVol, TfType
+Func: TfType
+LIBRARY: usdVol, TfType
+Func: TfType
+LIBRARY: usdVol, TfType
+Func: TfType
+LIBRARY: usdShade, TfType
+LIBRARY: usdShade, TfType
+Func: TfType
+LIBRARY: usdShade, TfType
+Func: TfType
+LIBRARY: usdShade, UsdShadeConnectableAPI
+Func: TfType
+LIBRARY: usdShade, TfType
+Func: UsdShadeConnectableAPI
+Func: TfType
+LIBRARY: usdShade, Tf_EnvSettingRegistry
+Func: UsdShadeConnectableAPI
+Func: TfType
+LIBRARY: usdShade, TfType
+Func: UsdShadeConnectableAPI
+Func: Tf_EnvSettingRegistry
+Func: TfType
+LIBRARY: usdShade, TfType
+Func: UsdShadeConnectableAPI
+Func: Tf_EnvSettingRegistry
+Func: TfType
+LIBRARY: usdShade, UsdShadeConnectableAPI
+Func: UsdShadeConnectableAPI
+Func: Tf_EnvSettingRegistry
+Func: TfType
+LIBRARY: usdShade, TfType
+Func: UsdShadeConnectableAPI
+Func: Tf_EnvSettingRegistry
+Func: TfType
+LIBRARY: usdShade, TfType
+Func: UsdShadeConnectableAPI
+Func: Tf_EnvSettingRegistry
+Func: TfType
+LIBRARY: usdShade, UsdShadeConnectableAPI
+Func: UsdShadeConnectableAPI
+Func: Tf_EnvSettingRegistry
+Func: TfType
+LIBRARY: usdRender, TfType
+LIBRARY: usdRender, TfType
+Func: TfType
+LIBRARY: usdRender, TfType
+Func: TfType
+LIBRARY: usdRender, TfType
+Func: TfType
+LIBRARY: usdRender, TfType
+Func: TfType
+LIBRARY: usdRender, TfType
+Func: TfType
+LIBRARY: usdLux, TfType
+LIBRARY: usdLux, TfType
+Func: TfType
+LIBRARY: usdLux, TfType
+Func: TfType
+LIBRARY: usdLux, TfType
+Func: TfType
+LIBRARY: usdLux, UsdGeomBoundable
+Func: TfType
+LIBRARY: usdLux, TfType
+Func: UsdGeomBoundable
+Func: TfType
+LIBRARY: usdLux, UsdGeomBoundable
+Func: UsdGeomBoundable
+Func: TfType
+LIBRARY: usdLux, TfType
+Func: UsdGeomBoundable
+Func: TfType
+LIBRARY: usdLux, TfType
+Func: UsdGeomBoundable
+Func: TfType
+LIBRARY: usdLux, TfType
+Func: UsdGeomBoundable
+Func: TfType
+LIBRARY: usdLux, TfType
+Func: UsdGeomBoundable
+Func: TfType
+LIBRARY: usdLux, UsdShadeConnectableAPI
+Func: UsdGeomBoundable
+Func: TfType
+LIBRARY: usdLux, TfType
+Func: UsdShadeConnectableAPI
+Func: UsdGeomBoundable
+Func: TfType
+LIBRARY: usdLux, UsdShadeConnectableAPI
+Func: UsdShadeConnectableAPI
+Func: UsdGeomBoundable
+Func: TfType
+LIBRARY: usdLux, TfType
+Func: UsdShadeConnectableAPI
+Func: UsdGeomBoundable
+Func: TfType
+LIBRARY: usdLux, TfEnum
+Func: UsdShadeConnectableAPI
+Func: UsdGeomBoundable
+Func: TfType
+LIBRARY: usdLux, TfType
+Func: TfEnum
+Func: UsdShadeConnectableAPI
+Func: UsdGeomBoundable
+Func: TfType
+LIBRARY: usdLux, TfEnum
+Func: TfEnum
+Func: UsdShadeConnectableAPI
+Func: UsdGeomBoundable
+Func: TfType
+LIBRARY: usdLux, TfType
+Func: TfEnum
+Func: UsdShadeConnectableAPI
+Func: UsdGeomBoundable
+Func: TfType
+LIBRARY: usdLux, TfType
+Func: TfEnum
+Func: UsdShadeConnectableAPI
+Func: UsdGeomBoundable
+Func: TfType
+LIBRARY: usdLux, TfType
+Func: TfEnum
+Func: UsdShadeConnectableAPI
+Func: UsdGeomBoundable
+Func: TfType
+LIBRARY: usdLux, TfType
+Func: TfEnum
+Func: UsdShadeConnectableAPI
+Func: UsdGeomBoundable
+Func: TfType
+LIBRARY: usdLux, TfType
+Func: TfEnum
+Func: UsdShadeConnectableAPI
+Func: UsdGeomBoundable
+Func: TfType
+LIBRARY: usdLux, UsdGeomBoundable
+Func: TfEnum
+Func: UsdShadeConnectableAPI
+Func: UsdGeomBoundable
+Func: TfType
+LIBRARY: usdLux, TfType
+Func: TfEnum
+Func: UsdShadeConnectableAPI
+Func: UsdGeomBoundable
+Func: TfType
+LIBRARY: usdLux, UsdGeomBoundable
+Func: TfEnum
+Func: UsdShadeConnectableAPI
+Func: UsdGeomBoundable
+Func: TfType
+LIBRARY: usdLux, TfType
+Func: TfEnum
+Func: UsdShadeConnectableAPI
+Func: UsdGeomBoundable
+Func: TfType
+LIBRARY: usdLux, TfType
+Func: TfEnum
+Func: UsdShadeConnectableAPI
+Func: UsdGeomBoundable
+Func: TfType
+LIBRARY: usdLux, TfType
+Func: TfEnum
+Func: UsdShadeConnectableAPI
+Func: UsdGeomBoundable
+Func: TfType
+LIBRARY: usdLux, UsdGeomBoundable
+Func: TfEnum
+Func: UsdShadeConnectableAPI
+Func: UsdGeomBoundable
+Func: TfType
+LIBRARY: usdLux, TfType
+Func: TfEnum
+Func: UsdShadeConnectableAPI
+Func: UsdGeomBoundable
+Func: TfType
+LIBRARY: pxOsd, TfEnum
+LIBRARY: cameraUtil, TfEnum
+LIBRARY: hd, Tf_EnvSettingRegistry
+LIBRARY: hd, TfDebug
+Func: Tf_EnvSettingRegistry
+LIBRARY: hd, TfEnum
+Func: TfDebug
+Func: Tf_EnvSettingRegistry
+LIBRARY: hd, Tf_EnvSettingRegistry
+Func: TfEnum
+Func: TfDebug
+Func: Tf_EnvSettingRegistry
+LIBRARY: hd, Tf_EnvSettingRegistry
+Func: TfEnum
+Func: TfDebug
+Func: Tf_EnvSettingRegistry
+LIBRARY: hd, TfType
+Func: TfEnum
+Func: TfDebug
+Func: Tf_EnvSettingRegistry
+LIBRARY: hd, TfType
+Func: TfEnum
+Func: TfDebug
+Func: TfType
+Func: Tf_EnvSettingRegistry
+LIBRARY: hd, Tf_EnvSettingRegistry
+Func: TfEnum
+Func: TfDebug
+Func: TfType
+Func: Tf_EnvSettingRegistry
+LIBRARY: hd, TfType
+Func: TfEnum
+Func: TfDebug
+Func: TfType
+Func: Tf_EnvSettingRegistry
+LIBRARY: hd, TfEnum
+Func: TfEnum
+Func: TfDebug
+Func: TfType
+Func: Tf_EnvSettingRegistry
+LIBRARY: hgi, TfDebug
+LIBRARY: hgi, Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: hgi, TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, TfDebug
+LIBRARY: usdImaging, Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, Tf_EnvSettingRegistry
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, TfType
+Func: TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, TfType
+Func: TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, TfType
+Func: TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, TfType
+Func: TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, TfType
+Func: TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, TfType
+Func: TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, TfType
+Func: TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, TfType
+Func: TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, TfType
+Func: TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, TfType
+Func: TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, TfType
+Func: TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, TfType
+Func: TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, TfType
+Func: TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, TfType
+Func: TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, TfType
+Func: TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, TfType
+Func: TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, TfType
+Func: TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, Tf_EnvSettingRegistry
+Func: TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, TfType
+Func: TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, TfType
+Func: TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, TfType
+Func: TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, TfType
+Func: TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, TfType
+Func: TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, TfType
+Func: TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, TfType
+Func: TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, TfType
+Func: TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, TfType
+Func: TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, TfType
+Func: TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, TfType
+Func: TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, TfType
+Func: TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, TfType
+Func: TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, TfType
+Func: TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, Tf_EnvSettingRegistry
+Func: TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, Tf_EnvSettingRegistry
+Func: TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, Tf_EnvSettingRegistry
+Func: TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, Tf_EnvSettingRegistry
+Func: TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, Tf_EnvSettingRegistry
+Func: TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, TfType
+Func: TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, TfType
+Func: TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, TfType
+Func: TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, TfType
+Func: TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, TfType
+Func: TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+LIBRARY: usdImaging, TfType
+Func: TfType
+Func: Tf_EnvSettingRegistry
+Func: TfDebug
+==572459== Warning: noted but unhandled ioctl 0x30000001 with no size/direction hints.
+==572459==    This could cause spurious value errors to appear.
+==572459==    See README_MISSING_SYSCALL_OR_IOCTL for guidance on writing a proper wrapper.
+==572459== Warning: noted but unhandled ioctl 0x27 with no size/direction hints.
+==572459==    This could cause spurious value errors to appear.
+==572459==    See README_MISSING_SYSCALL_OR_IOCTL for guidance on writing a proper wrapper.
+==572459== Warning: noted but unhandled ioctl 0x25 with no size/direction hints.
+==572459==    This could cause spurious value errors to appear.
+==572459==    See README_MISSING_SYSCALL_OR_IOCTL for guidance on writing a proper wrapper.
+==572459== Warning: noted but unhandled ioctl 0x17 with no size/direction hints.
+==572459==    This could cause spurious value errors to appear.
+==572459==    See README_MISSING_SYSCALL_OR_IOCTL for guidance on writing a proper wrapper.
+==572459== Warning: set address range perms: large range [0x200000000, 0x300200000) (noaccess)
+==572459== Warning: set address range perms: large range [0x14f1b000, 0x34f1a000) (noaccess)
+==572459== Warning: noted but unhandled ioctl 0x19 with no size/direction hints.
+==572459==    This could cause spurious value errors to appear.
+==572459==    See README_MISSING_SYSCALL_OR_IOCTL for guidance on writing a proper wrapper.
+==572459== Warning: noted but unhandled ioctl 0x49 with no size/direction hints.
+==572459==    This could cause spurious value errors to appear.
+==572459==    See README_MISSING_SYSCALL_OR_IOCTL for guidance on writing a proper wrapper.
+==572459== Warning: noted but unhandled ioctl 0x21 with no size/direction hints.
+==572459==    This could cause spurious value errors to appear.
+==572459==    See README_MISSING_SYSCALL_OR_IOCTL for guidance on writing a proper wrapper.
+==572459== Warning: noted but unhandled ioctl 0x1b with no size/direction hints.
+==572459==    This could cause spurious value errors to appear.
+==572459==    See README_MISSING_SYSCALL_OR_IOCTL for guidance on writing a proper wrapper.
+==572459== Warning: noted but unhandled ioctl 0x44 with no size/direction hints.
+==572459==    This could cause spurious value errors to appear.
+==572459==    See README_MISSING_SYSCALL_OR_IOCTL for guidance on writing a proper wrapper.
+==572459== Warning: noted but unhandled ioctl 0x48 with no size/direction hints.
+==572459==    This could cause spurious value errors to appear.
+==572459==    See README_MISSING_SYSCALL_OR_IOCTL for guidance on writing a proper wrapper.
+All knobs on default.
+
+Opened database: "/var/tmp/OptixCache_jeremy/optix7cache.db"
+    Cache data size: "28.8 MiB"
+==572459== Warning: set address range perms: large range [0x5a88a000, 0x7288a000) (noaccess)
+==572459== Invalid read of size 8
+==572459==    at 0x117B8B07: std::string::empty() const (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.30)
+==572459==    by 0xDFDCAE2: pxrInternal_v0_22__pxrReserved__::HdRenderIndex::HdRenderIndex(pxrInternal_v0_22__pxrReserved__::HdRenderDelegate*, std::vector<pxrInternal_v0_22__pxrReserved__::HdDriver*, std::allocator<pxrInternal_v0_22__pxrReserved__::HdDriver*> > const&) (USD/pxr/imaging/hd/renderIndex.cpp:132)
+==572459==    by 0xDFDEBB9: pxrInternal_v0_22__pxrReserved__::HdRenderIndex::New(pxrInternal_v0_22__pxrReserved__::HdRenderDelegate*, std::vector<pxrInternal_v0_22__pxrReserved__::HdDriver*, std::allocator<pxrInternal_v0_22__pxrReserved__::HdDriver*> > const&) (USD/pxr/imaging/hd/renderIndex.cpp:179)
+==572459==    by 0x10EE7F8: HdCycles::HdCyclesFileReader::read(ccl::Session*, char const*, bool) (in /home/jeremy/cycles-dlg/build/Release/bin/cycles)
+==572459==    by 0x964A23: main (in /home/jeremy/cycles-dlg/build/Release/bin/cycles)
+==572459==  Address 0x1d6728e8 is 24 bytes before a block of size 136 alloc'd
+==572459==    at 0xACB6013: operator new(unsigned long) (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==572459==    by 0x10F829F: HdCycles::HdCyclesDelegate::HdCyclesDelegate(pxrInternal_v0_22__pxrReserved__::TfHashMap<pxrInternal_v0_22__pxrReserved__::TfToken, pxrInternal_v0_22__pxrReserved__::VtValue, pxrInternal_v0_22__pxrReserved__::TfToken::HashFunctor, std::equal_to<pxrInternal_v0_22__pxrReserved__::TfToken>, std::allocator<pxrInternal_v0_22__pxrReserved__::VtValue> > const&, ccl::Session*, bool) (in /home/jeremy/cycles-dlg/build/Release/bin/cycles)
+==572459==    by 0x10EE7D3: HdCycles::HdCyclesFileReader::read(ccl::Session*, char const*, bool) (in /home/jeremy/cycles-dlg/build/Release/bin/cycles)
+==572459==    by 0x964A23: main (in /home/jeremy/cycles-dlg/build/Release/bin/cycles)
+==572459== 
+/, test.usda
+==572459== Invalid write of size 8
+==572459==    at 0xACBF7F4: memset (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==572459==    by 0xB39C713: tbb::interface5::internal::concurrent_unordered_base<tbb::interface5::concurrent_unordered_map_traits<pxrInternal_v0_22__pxrReserved__::UsdPrim, pxrInternal_v0_22__pxrReserved__::UsdImaging_ResolvedAttributeCache<pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy, bool>::_Entry, tbb::interface5::internal::hash_compare<pxrInternal_v0_22__pxrReserved__::UsdPrim, boost::hash<pxrInternal_v0_22__pxrReserved__::UsdPrim>, std::equal_to<pxrInternal_v0_22__pxrReserved__::UsdPrim> >, tbb::tbb_allocator<std::pair<pxrInternal_v0_22__pxrReserved__::UsdPrim const, pxrInternal_v0_22__pxrReserved__::UsdImaging_ResolvedAttributeCache<pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy, bool>::_Entry> >, false> >::internal_init() (include/tbb/internal/_concurrent_unordered_impl.h:1315)
+==572459==    by 0xB39C63A: tbb::interface5::internal::concurrent_unordered_base<tbb::interface5::concurrent_unordered_map_traits<pxrInternal_v0_22__pxrReserved__::UsdPrim, pxrInternal_v0_22__pxrReserved__::UsdImaging_ResolvedAttributeCache<pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy, bool>::_Entry, tbb::interface5::internal::hash_compare<pxrInternal_v0_22__pxrReserved__::UsdPrim, boost::hash<pxrInternal_v0_22__pxrReserved__::UsdPrim>, std::equal_to<pxrInternal_v0_22__pxrReserved__::UsdPrim> >, tbb::tbb_allocator<std::pair<pxrInternal_v0_22__pxrReserved__::UsdPrim const, pxrInternal_v0_22__pxrReserved__::UsdImaging_ResolvedAttributeCache<pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy, bool>::_Entry> >, false> >::concurrent_unordered_base(unsigned long, tbb::interface5::internal::hash_compare<pxrInternal_v0_22__pxrReserved__::UsdPrim, boost::hash<pxrInternal_v0_22__pxrReserved__::UsdPrim>, std::equal_to<pxrInternal_v0_22__pxrReserved__::UsdPrim> > const&, tbb::tbb_allocator<std::pair<pxrInternal_v0_22__pxrReserved__::UsdPrim const, pxrInternal_v0_22__pxrReserved__::UsdImaging_ResolvedAttributeCache<pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy, bool>::_Entry> > const&) (include/tbb/internal/_concurrent_unordered_impl.h:749)
+==572459==    by 0xB39C509: tbb::interface5::concurrent_unordered_map<pxrInternal_v0_22__pxrReserved__::UsdPrim, pxrInternal_v0_22__pxrReserved__::UsdImaging_ResolvedAttributeCache<pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy, bool>::_Entry, boost::hash<pxrInternal_v0_22__pxrReserved__::UsdPrim>, std::equal_to<pxrInternal_v0_22__pxrReserved__::UsdPrim>, tbb::tbb_allocator<std::pair<pxrInternal_v0_22__pxrReserved__::UsdPrim const, pxrInternal_v0_22__pxrReserved__::UsdImaging_ResolvedAttributeCache<pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy, bool>::_Entry> > >::concurrent_unordered_map(unsigned long, boost::hash<pxrInternal_v0_22__pxrReserved__::UsdPrim> const&, std::equal_to<pxrInternal_v0_22__pxrReserved__::UsdPrim> const&, tbb::tbb_allocator<std::pair<pxrInternal_v0_22__pxrReserved__::UsdPrim const, pxrInternal_v0_22__pxrReserved__::UsdImaging_ResolvedAttributeCache<pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy, bool>::_Entry> > const&) (include/tbb/concurrent_unordered_map.h:107)
+==572459==    by 0xB377F6E: pxrInternal_v0_22__pxrReserved__::UsdImaging_ResolvedAttributeCache<pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy, bool>::UsdImaging_ResolvedAttributeCache(pxrInternal_v0_22__pxrReserved__::UsdTimeCode, bool*, pxrInternal_v0_22__pxrReserved__::TfHashMap<pxrInternal_v0_22__pxrReserved__::UsdPrim, pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy::value_type, boost::hash<pxrInternal_v0_22__pxrReserved__::UsdPrim>, std::equal_to<pxrInternal_v0_22__pxrReserved__::UsdPrim>, std::allocator<std::pair<pxrInternal_v0_22__pxrReserved__::UsdPrim const, pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy::value_type> > >) (USD/pxr/usdImaging/usdImaging/resolvedAttributeCache.h:82)
+==572459==    by 0xB3603ED: pxrInternal_v0_22__pxrReserved__::UsdImagingDelegate::UsdImagingDelegate(pxrInternal_v0_22__pxrReserved__::HdRenderIndex*, pxrInternal_v0_22__pxrReserved__::SdfPath const&) (USD/pxr/usdImaging/usdImaging/delegate.cpp:122)
+==572459==    by 0x10EE8B7: HdCycles::HdCyclesFileReader::read(ccl::Session*, char const*, bool) (in /home/jeremy/cycles-dlg/build/Release/bin/cycles)
+==572459==    by 0x964A23: main (in /home/jeremy/cycles-dlg/build/Release/bin/cycles)
+==572459==  Address 0x1d6798b8 is 0 bytes after a block of size 9,160 alloc'd
+==572459==    at 0xACB6013: operator new(unsigned long) (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==572459==    by 0x10EE8A2: HdCycles::HdCyclesFileReader::read(ccl::Session*, char const*, bool) (in /home/jeremy/cycles-dlg/build/Release/bin/cycles)
+==572459==    by 0x964A23: main (in /home/jeremy/cycles-dlg/build/Release/bin/cycles)
+==572459== 
+==572459== Invalid write of size 8
+==572459==    at 0xACBF7F7: memset (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==572459==    by 0xB39C713: tbb::interface5::internal::concurrent_unordered_base<tbb::interface5::concurrent_unordered_map_traits<pxrInternal_v0_22__pxrReserved__::UsdPrim, pxrInternal_v0_22__pxrReserved__::UsdImaging_ResolvedAttributeCache<pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy, bool>::_Entry, tbb::interface5::internal::hash_compare<pxrInternal_v0_22__pxrReserved__::UsdPrim, boost::hash<pxrInternal_v0_22__pxrReserved__::UsdPrim>, std::equal_to<pxrInternal_v0_22__pxrReserved__::UsdPrim> >, tbb::tbb_allocator<std::pair<pxrInternal_v0_22__pxrReserved__::UsdPrim const, pxrInternal_v0_22__pxrReserved__::UsdImaging_ResolvedAttributeCache<pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy, bool>::_Entry> >, false> >::internal_init() (include/tbb/internal/_concurrent_unordered_impl.h:1315)
+==572459==    by 0xB39C63A: tbb::interface5::internal::concurrent_unordered_base<tbb::interface5::concurrent_unordered_map_traits<pxrInternal_v0_22__pxrReserved__::UsdPrim, pxrInternal_v0_22__pxrReserved__::UsdImaging_ResolvedAttributeCache<pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy, bool>::_Entry, tbb::interface5::internal::hash_compare<pxrInternal_v0_22__pxrReserved__::UsdPrim, boost::hash<pxrInternal_v0_22__pxrReserved__::UsdPrim>, std::equal_to<pxrInternal_v0_22__pxrReserved__::UsdPrim> >, tbb::tbb_allocator<std::pair<pxrInternal_v0_22__pxrReserved__::UsdPrim const, pxrInternal_v0_22__pxrReserved__::UsdImaging_ResolvedAttributeCache<pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy, bool>::_Entry> >, false> >::concurrent_unordered_base(unsigned long, tbb::interface5::internal::hash_compare<pxrInternal_v0_22__pxrReserved__::UsdPrim, boost::hash<pxrInternal_v0_22__pxrReserved__::UsdPrim>, std::equal_to<pxrInternal_v0_22__pxrReserved__::UsdPrim> > const&, tbb::tbb_allocator<std::pair<pxrInternal_v0_22__pxrReserved__::UsdPrim const, pxrInternal_v0_22__pxrReserved__::UsdImaging_ResolvedAttributeCache<pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy, bool>::_Entry> > const&) (include/tbb/internal/_concurrent_unordered_impl.h:749)
+==572459==    by 0xB39C509: tbb::interface5::concurrent_unordered_map<pxrInternal_v0_22__pxrReserved__::UsdPrim, pxrInternal_v0_22__pxrReserved__::UsdImaging_ResolvedAttributeCache<pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy, bool>::_Entry, boost::hash<pxrInternal_v0_22__pxrReserved__::UsdPrim>, std::equal_to<pxrInternal_v0_22__pxrReserved__::UsdPrim>, tbb::tbb_allocator<std::pair<pxrInternal_v0_22__pxrReserved__::UsdPrim const, pxrInternal_v0_22__pxrReserved__::UsdImaging_ResolvedAttributeCache<pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy, bool>::_Entry> > >::concurrent_unordered_map(unsigned long, boost::hash<pxrInternal_v0_22__pxrReserved__::UsdPrim> const&, std::equal_to<pxrInternal_v0_22__pxrReserved__::UsdPrim> const&, tbb::tbb_allocator<std::pair<pxrInternal_v0_22__pxrReserved__::UsdPrim const, pxrInternal_v0_22__pxrReserved__::UsdImaging_ResolvedAttributeCache<pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy, bool>::_Entry> > const&) (include/tbb/concurrent_unordered_map.h:107)
+==572459==    by 0xB377F6E: pxrInternal_v0_22__pxrReserved__::UsdImaging_ResolvedAttributeCache<pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy, bool>::UsdImaging_ResolvedAttributeCache(pxrInternal_v0_22__pxrReserved__::UsdTimeCode, bool*, pxrInternal_v0_22__pxrReserved__::TfHashMap<pxrInternal_v0_22__pxrReserved__::UsdPrim, pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy::value_type, boost::hash<pxrInternal_v0_22__pxrReserved__::UsdPrim>, std::equal_to<pxrInternal_v0_22__pxrReserved__::UsdPrim>, std::allocator<std::pair<pxrInternal_v0_22__pxrReserved__::UsdPrim const, pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy::value_type> > >) (USD/pxr/usdImaging/usdImaging/resolvedAttributeCache.h:82)
+==572459==    by 0xB3603ED: pxrInternal_v0_22__pxrReserved__::UsdImagingDelegate::UsdImagingDelegate(pxrInternal_v0_22__pxrReserved__::HdRenderIndex*, pxrInternal_v0_22__pxrReserved__::SdfPath const&) (USD/pxr/usdImaging/usdImaging/delegate.cpp:122)
+==572459==    by 0x10EE8B7: HdCycles::HdCyclesFileReader::read(ccl::Session*, char const*, bool) (in /home/jeremy/cycles-dlg/build/Release/bin/cycles)
+==572459==    by 0x964A23: main (in /home/jeremy/cycles-dlg/build/Release/bin/cycles)
+==572459==  Address 0x1d6798c0 is 8 bytes after a block of size 9,160 alloc'd
+==572459==    at 0xACB6013: operator new(unsigned long) (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==572459==    by 0x10EE8A2: HdCycles::HdCyclesFileReader::read(ccl::Session*, char const*, bool) (in /home/jeremy/cycles-dlg/build/Release/bin/cycles)
+==572459==    by 0x964A23: main (in /home/jeremy/cycles-dlg/build/Release/bin/cycles)
+==572459== 
+==572459== Invalid write of size 8
+==572459==    at 0xACBF7FB: memset (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==572459==    by 0xB39C713: tbb::interface5::internal::concurrent_unordered_base<tbb::interface5::concurrent_unordered_map_traits<pxrInternal_v0_22__pxrReserved__::UsdPrim, pxrInternal_v0_22__pxrReserved__::UsdImaging_ResolvedAttributeCache<pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy, bool>::_Entry, tbb::interface5::internal::hash_compare<pxrInternal_v0_22__pxrReserved__::UsdPrim, boost::hash<pxrInternal_v0_22__pxrReserved__::UsdPrim>, std::equal_to<pxrInternal_v0_22__pxrReserved__::UsdPrim> >, tbb::tbb_allocator<std::pair<pxrInternal_v0_22__pxrReserved__::UsdPrim const, pxrInternal_v0_22__pxrReserved__::UsdImaging_ResolvedAttributeCache<pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy, bool>::_Entry> >, false> >::internal_init() (include/tbb/internal/_concurrent_unordered_impl.h:1315)
+==572459==    by 0xB39C63A: tbb::interface5::internal::concurrent_unordered_base<tbb::interface5::concurrent_unordered_map_traits<pxrInternal_v0_22__pxrReserved__::UsdPrim, pxrInternal_v0_22__pxrReserved__::UsdImaging_ResolvedAttributeCache<pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy, bool>::_Entry, tbb::interface5::internal::hash_compare<pxrInternal_v0_22__pxrReserved__::UsdPrim, boost::hash<pxrInternal_v0_22__pxrReserved__::UsdPrim>, std::equal_to<pxrInternal_v0_22__pxrReserved__::UsdPrim> >, tbb::tbb_allocator<std::pair<pxrInternal_v0_22__pxrReserved__::UsdPrim const, pxrInternal_v0_22__pxrReserved__::UsdImaging_ResolvedAttributeCache<pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy, bool>::_Entry> >, false> >::concurrent_unordered_base(unsigned long, tbb::interface5::internal::hash_compare<pxrInternal_v0_22__pxrReserved__::UsdPrim, boost::hash<pxrInternal_v0_22__pxrReserved__::UsdPrim>, std::equal_to<pxrInternal_v0_22__pxrReserved__::UsdPrim> > const&, tbb::tbb_allocator<std::pair<pxrInternal_v0_22__pxrReserved__::UsdPrim const, pxrInternal_v0_22__pxrReserved__::UsdImaging_ResolvedAttributeCache<pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy, bool>::_Entry> > const&) (include/tbb/internal/_concurrent_unordered_impl.h:749)
+==572459==    by 0xB39C509: tbb::interface5::concurrent_unordered_map<pxrInternal_v0_22__pxrReserved__::UsdPrim, pxrInternal_v0_22__pxrReserved__::UsdImaging_ResolvedAttributeCache<pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy, bool>::_Entry, boost::hash<pxrInternal_v0_22__pxrReserved__::UsdPrim>, std::equal_to<pxrInternal_v0_22__pxrReserved__::UsdPrim>, tbb::tbb_allocator<std::pair<pxrInternal_v0_22__pxrReserved__::UsdPrim const, pxrInternal_v0_22__pxrReserved__::UsdImaging_ResolvedAttributeCache<pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy, bool>::_Entry> > >::concurrent_unordered_map(unsigned long, boost::hash<pxrInternal_v0_22__pxrReserved__::UsdPrim> const&, std::equal_to<pxrInternal_v0_22__pxrReserved__::UsdPrim> const&, tbb::tbb_allocator<std::pair<pxrInternal_v0_22__pxrReserved__::UsdPrim const, pxrInternal_v0_22__pxrReserved__::UsdImaging_ResolvedAttributeCache<pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy, bool>::_Entry> > const&) (include/tbb/concurrent_unordered_map.h:107)
+==572459==    by 0xB377F6E: pxrInternal_v0_22__pxrReserved__::UsdImaging_ResolvedAttributeCache<pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy, bool>::UsdImaging_ResolvedAttributeCache(pxrInternal_v0_22__pxrReserved__::UsdTimeCode, bool*, pxrInternal_v0_22__pxrReserved__::TfHashMap<pxrInternal_v0_22__pxrReserved__::UsdPrim, pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy::value_type, boost::hash<pxrInternal_v0_22__pxrReserved__::UsdPrim>, std::equal_to<pxrInternal_v0_22__pxrReserved__::UsdPrim>, std::allocator<std::pair<pxrInternal_v0_22__pxrReserved__::UsdPrim const, pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy::value_type> > >) (USD/pxr/usdImaging/usdImaging/resolvedAttributeCache.h:82)
+==572459==    by 0xB3603ED: pxrInternal_v0_22__pxrReserved__::UsdImagingDelegate::UsdImagingDelegate(pxrInternal_v0_22__pxrReserved__::HdRenderIndex*, pxrInternal_v0_22__pxrReserved__::SdfPath const&) (USD/pxr/usdImaging/usdImaging/delegate.cpp:122)
+==572459==    by 0x10EE8B7: HdCycles::HdCyclesFileReader::read(ccl::Session*, char const*, bool) (in /home/jeremy/cycles-dlg/build/Release/bin/cycles)
+==572459==    by 0x964A23: main (in /home/jeremy/cycles-dlg/build/Release/bin/cycles)
+==572459==  Address 0x1d6798c8 is 16 bytes after a block of size 9,160 alloc'd
+==572459==    at 0xACB6013: operator new(unsigned long) (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==572459==    by 0x10EE8A2: HdCycles::HdCyclesFileReader::read(ccl::Session*, char const*, bool) (in /home/jeremy/cycles-dlg/build/Release/bin/cycles)
+==572459==    by 0x964A23: main (in /home/jeremy/cycles-dlg/build/Release/bin/cycles)
+==572459== 
+==572459== Invalid write of size 8
+==572459==    at 0xACBF7FF: memset (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==572459==    by 0xB39C713: tbb::interface5::internal::concurrent_unordered_base<tbb::interface5::concurrent_unordered_map_traits<pxrInternal_v0_22__pxrReserved__::UsdPrim, pxrInternal_v0_22__pxrReserved__::UsdImaging_ResolvedAttributeCache<pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy, bool>::_Entry, tbb::interface5::internal::hash_compare<pxrInternal_v0_22__pxrReserved__::UsdPrim, boost::hash<pxrInternal_v0_22__pxrReserved__::UsdPrim>, std::equal_to<pxrInternal_v0_22__pxrReserved__::UsdPrim> >, tbb::tbb_allocator<std::pair<pxrInternal_v0_22__pxrReserved__::UsdPrim const, pxrInternal_v0_22__pxrReserved__::UsdImaging_ResolvedAttributeCache<pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy, bool>::_Entry> >, false> >::internal_init() (include/tbb/internal/_concurrent_unordered_impl.h:1315)
+==572459==    by 0xB39C63A: tbb::interface5::internal::concurrent_unordered_base<tbb::interface5::concurrent_unordered_map_traits<pxrInternal_v0_22__pxrReserved__::UsdPrim, pxrInternal_v0_22__pxrReserved__::UsdImaging_ResolvedAttributeCache<pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy, bool>::_Entry, tbb::interface5::internal::hash_compare<pxrInternal_v0_22__pxrReserved__::UsdPrim, boost::hash<pxrInternal_v0_22__pxrReserved__::UsdPrim>, std::equal_to<pxrInternal_v0_22__pxrReserved__::UsdPrim> >, tbb::tbb_allocator<std::pair<pxrInternal_v0_22__pxrReserved__::UsdPrim const, pxrInternal_v0_22__pxrReserved__::UsdImaging_ResolvedAttributeCache<pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy, bool>::_Entry> >, false> >::concurrent_unordered_base(unsigned long, tbb::interface5::internal::hash_compare<pxrInternal_v0_22__pxrReserved__::UsdPrim, boost::hash<pxrInternal_v0_22__pxrReserved__::UsdPrim>, std::equal_to<pxrInternal_v0_22__pxrReserved__::UsdPrim> > const&, tbb::tbb_allocator<std::pair<pxrInternal_v0_22__pxrReserved__::UsdPrim const, pxrInternal_v0_22__pxrReserved__::UsdImaging_ResolvedAttributeCache<pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy, bool>::_Entry> > const&) (include/tbb/internal/_concurrent_unordered_impl.h:749)
+==572459==    by 0xB39C509: tbb::interface5::concurrent_unordered_map<pxrInternal_v0_22__pxrReserved__::UsdPrim, pxrInternal_v0_22__pxrReserved__::UsdImaging_ResolvedAttributeCache<pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy, bool>::_Entry, boost::hash<pxrInternal_v0_22__pxrReserved__::UsdPrim>, std::equal_to<pxrInternal_v0_22__pxrReserved__::UsdPrim>, tbb::tbb_allocator<std::pair<pxrInternal_v0_22__pxrReserved__::UsdPrim const, pxrInternal_v0_22__pxrReserved__::UsdImaging_ResolvedAttributeCache<pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy, bool>::_Entry> > >::concurrent_unordered_map(unsigned long, boost::hash<pxrInternal_v0_22__pxrReserved__::UsdPrim> const&, std::equal_to<pxrInternal_v0_22__pxrReserved__::UsdPrim> const&, tbb::tbb_allocator<std::pair<pxrInternal_v0_22__pxrReserved__::UsdPrim const, pxrInternal_v0_22__pxrReserved__::UsdImaging_ResolvedAttributeCache<pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy, bool>::_Entry> > const&) (include/tbb/concurrent_unordered_map.h:107)
+==572459==    by 0xB377F6E: pxrInternal_v0_22__pxrReserved__::UsdImaging_ResolvedAttributeCache<pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy, bool>::UsdImaging_ResolvedAttributeCache(pxrInternal_v0_22__pxrReserved__::UsdTimeCode, bool*, pxrInternal_v0_22__pxrReserved__::TfHashMap<pxrInternal_v0_22__pxrReserved__::UsdPrim, pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy::value_type, boost::hash<pxrInternal_v0_22__pxrReserved__::UsdPrim>, std::equal_to<pxrInternal_v0_22__pxrReserved__::UsdPrim>, std::allocator<std::pair<pxrInternal_v0_22__pxrReserved__::UsdPrim const, pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy::value_type> > >) (USD/pxr/usdImaging/usdImaging/resolvedAttributeCache.h:82)
+==572459==    by 0xB3603ED: pxrInternal_v0_22__pxrReserved__::UsdImagingDelegate::UsdImagingDelegate(pxrInternal_v0_22__pxrReserved__::HdRenderIndex*, pxrInternal_v0_22__pxrReserved__::SdfPath const&) (USD/pxr/usdImaging/usdImaging/delegate.cpp:122)
+==572459==    by 0x10EE8B7: HdCycles::HdCyclesFileReader::read(ccl::Session*, char const*, bool) (in /home/jeremy/cycles-dlg/build/Release/bin/cycles)
+==572459==    by 0x964A23: main (in /home/jeremy/cycles-dlg/build/Release/bin/cycles)
+==572459==  Address 0x1d6798d0 is 16 bytes after a block of size 9,168 in arena "client"
+==572459== 
+
+valgrind: m_mallocfree.c:303 (get_bszB_as_is): Assertion 'bszB_lo == bszB_hi' failed.
+valgrind: Heap block lo/hi size mismatch: lo = 9232, hi = 0.
+This is probably caused by your program erroneously writing past the
+end of a heap block and corrupting heap metadata.  If you fix any
+invalid writes reported by Memcheck, this assertion failure will
+probably go away.  Please try that before reporting this as a bug.
+
+
+host stacktrace:
+==572459==    at 0x5804284A: ??? (in /usr/libexec/valgrind/memcheck-amd64-linux)
+==572459==    by 0x58042977: ??? (in /usr/libexec/valgrind/memcheck-amd64-linux)
+==572459==    by 0x58042B1B: ??? (in /usr/libexec/valgrind/memcheck-amd64-linux)
+==572459==    by 0x5804C8CF: ??? (in /usr/libexec/valgrind/memcheck-amd64-linux)
+==572459==    by 0x5803AE9A: ??? (in /usr/libexec/valgrind/memcheck-amd64-linux)
+==572459==    by 0x580395B7: ??? (in /usr/libexec/valgrind/memcheck-amd64-linux)
+==572459==    by 0x5803DF3D: ??? (in /usr/libexec/valgrind/memcheck-amd64-linux)
+==572459==    by 0x58038868: ??? (in /usr/libexec/valgrind/memcheck-amd64-linux)
+==572459==    by 0x101A11ABDF: ???
+==572459==    by 0x1005DC5F2F: ???
+==572459==    by 0x581FCD83: ??? (in /usr/libexec/valgrind/memcheck-amd64-linux)
+==572459==    by 0x1005DC5F17: ???
+==572459==    by 0x1005DC5F2F: ???
+
+sched status:
+  running_tid=1
+
+Thread 1: status = VgTs_Runnable (lwpid 572459)
+==572459==    at 0xB377F77: pxrInternal_v0_22__pxrReserved__::UsdImaging_ResolvedAttributeCache<pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy, bool>::UsdImaging_ResolvedAttributeCache(pxrInternal_v0_22__pxrReserved__::UsdTimeCode, bool*, pxrInternal_v0_22__pxrReserved__::TfHashMap<pxrInternal_v0_22__pxrReserved__::UsdPrim, pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy::value_type, boost::hash<pxrInternal_v0_22__pxrReserved__::UsdPrim>, std::equal_to<pxrInternal_v0_22__pxrReserved__::UsdPrim>, std::allocator<std::pair<pxrInternal_v0_22__pxrReserved__::UsdPrim const, pxrInternal_v0_22__pxrReserved__::UsdImaging_BlurScaleStrategy::value_type> > >) (USD/pxr/usdImaging/usdImaging/resolvedAttributeCache.h:86)
+==572459==    by 0xB3603ED: pxrInternal_v0_22__pxrReserved__::UsdImagingDelegate::UsdImagingDelegate(pxrInternal_v0_22__pxrReserved__::HdRenderIndex*, pxrInternal_v0_22__pxrReserved__::SdfPath const&) (USD/pxr/usdImaging/usdImaging/delegate.cpp:122)
+==572459==    by 0x10EE8B7: HdCycles::HdCyclesFileReader::read(ccl::Session*, char const*, bool) (in /home/jeremy/cycles-dlg/build/Release/bin/cycles)
+==572459==    by 0x964A23: main (in /home/jeremy/cycles-dlg/build/Release/bin/cycles)
+client stack range: [0x1FFEFF2000 0x1FFF000FFF] client SP: 0x1FFEFFF350
+valgrind stack range: [0x1005CC6000 0x1005DC5FFF] top usage: 18984 of 1048576
+
+Thread 2: status = VgTs_WaitSys syscall 7 (lwpid 572714)
+==572459==    at 0x11A27D7F: poll (poll.c:29)
+==572459==    by 0xBB8F928: ??? (in /usr/lib/x86_64-linux-gnu/libcuda.so.520.61.05)
+==572459==    by 0xBC451F3: ??? (in /usr/lib/x86_64-linux-gnu/libcuda.so.520.61.05)
+==572459==    by 0xBB8B3A7: ??? (in /usr/lib/x86_64-linux-gnu/libcuda.so.520.61.05)
+==572459==    by 0x119A3B42: start_thread (pthread_create.c:442)
+==572459==    by 0x11A34BB3: clone (clone.S:100)
+client stack range: [0x14F1C000 0x156D3FFF] client SP: 0x156D37A0
+valgrind stack range: [0x10109FC000 0x1010AFBFFF] top usage: 3520 of 1048576
+
+Thread 3: status = VgTs_WaitSys syscall 7 (lwpid 572715)
+==572459==    at 0x11A27D7F: poll (poll.c:29)
+==572459==    by 0xBB8F928: ??? (in /usr/lib/x86_64-linux-gnu/libcuda.so.520.61.05)
+==572459==    by 0xBC451F3: ??? (in /usr/lib/x86_64-linux-gnu/libcuda.so.520.61.05)
+==572459==    by 0xBB8B3A7: ??? (in /usr/lib/x86_64-linux-gnu/libcuda.so.520.61.05)
+==572459==    by 0x119A3B42: start_thread (pthread_create.c:442)
+==572459==    by 0x11A34BB3: clone (clone.S:100)
+client stack range: [0x1571D000 0x15ED4FFF] client SP: 0x15ED47A0
+valgrind stack range: [0x101109E000 0x101119DFFF] top usage: 3696 of 1048576
+
+Thread 4: status = VgTs_WaitSys syscall 202 (lwpid 572716)
+==572459==    at 0x119A0197: __futex_abstimed_wait_common64 (futex-internal.c:57)
+==572459==    by 0x119A0197: __futex_abstimed_wait_common (futex-internal.c:87)
+==572459==    by 0x119A0197: __futex_abstimed_wait_cancelable64 (futex-internal.c:139)
+==572459==    by 0x119A2F1A: __pthread_cond_wait_common (pthread_cond_wait.c:503)
+==572459==    by 0x119A2F1A: pthread_cond_timedwait@@GLIBC_2.3.2 (pthread_cond_wait.c:652)
+==572459==    by 0xBB0375E: ??? (in /usr/lib/x86_64-linux-gnu/libcuda.so.520.61.05)
+==572459==    by 0xBB8B3A7: ??? (in /usr/lib/x86_64-linux-gnu/libcuda.so.520.61.05)
+==572459==    by 0x119A3B42: start_thread (pthread_create.c:442)
+==572459==    by 0x11A34BB3: clone (clone.S:100)
+client stack range: [0x18401000 0x18BB8FFF] client SP: 0x18BB8750
+valgrind stack range: [0x101142A000 0x1011529FFF] top usage: 3656 of 1048576
+
+Thread 5: status = VgTs_WaitSys syscall 202 (lwpid 572799)
+==572459==    at 0x119A0197: __futex_abstimed_wait_common64 (futex-internal.c:57)
+==572459==    by 0x119A0197: __futex_abstimed_wait_common (futex-internal.c:87)
+==572459==    by 0x119A0197: __futex_abstimed_wait_cancelable64 (futex-internal.c:139)
+==572459==    by 0x119A2AC0: __pthread_cond_wait_common (pthread_cond_wait.c:503)
+==572459==    by 0x119A2AC0: pthread_cond_wait@@GLIBC_2.3.2 (pthread_cond_wait.c:627)
+==572459==    by 0xFC4ECA: ccl::Session::thread_run() (in /home/jeremy/cycles-dlg/build/Release/bin/cycles)
+==572459==    by 0x1009C41: ccl::thread::run(void*) (in /home/jeremy/cycles-dlg/build/Release/bin/cycles)
+==572459==    by 0x117A12B2: ??? (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.30)
+==572459==    by 0x119A3B42: start_thread (pthread_create.c:442)
+==572459==    by 0x11A34BB3: clone (clone.S:100)
+client stack range: [0x1F052000 0x1F809FFF] client SP: 0x1F809790
+valgrind stack range: [0x101463D000 0x101473CFFF] top usage: 3656 of 1048576
+
+Thread 6: status = VgTs_WaitSys syscall 24 (lwpid 572800)
+==572459==    at 0x11A17CAB: sched_yield (syscall-template.S:120)
+==572459==    by 0xD29B0E4: tbb::internal::custom_scheduler<tbb::internal::IntelSchedulerTraits>::receive_or_steal_task(long&, long) (custom_scheduler.h:285)
+==572459==    by 0xD29BFC7: tbb::internal::custom_scheduler<tbb::internal::IntelSchedulerTraits>::local_wait_for_all(tbb::task&, tbb::task*) (custom_scheduler.h:629)
+==572459==    by 0xD295D65: tbb::internal::arena::process(tbb::internal::generic_scheduler&) (arena.cpp:156)
+==572459==    by 0xD294477: tbb::internal::market::process(rml::job&) (market.cpp:702)
+==572459==    by 0xD290A1F: tbb::internal::rml::private_worker::run() (private_server.cpp:266)
+==572459==    by 0xD290C8C: tbb::internal::rml::private_worker::thread_routine(void*) (private_server.cpp:219)
+==572459==    by 0x119A3B42: start_thread (pthread_create.c:442)
+==572459==    by 0x11A34BB3: clone (clone.S:100)
+client stack range: [0x1CB04000 0x1CEBBFFF] client SP: 0x1CEBB758
+valgrind stack range: [0x1014841000 0x1014940FFF] top usage: 5472 of 1048576
+
+Thread 7: status = VgTs_WaitSys syscall 24 (lwpid 572801)
+==572459==    at 0x11A17CAB: sched_yield (syscall-template.S:120)
+==572459==    by 0xD29B0E4: tbb::internal::custom_scheduler<tbb::internal::IntelSchedulerTraits>::receive_or_steal_task(long&, long) (custom_scheduler.h:285)
+==572459==    by 0xD295D45: tbb::internal::arena::process(tbb::internal::generic_scheduler&) (arena.cpp:151)
+==572459==    by 0xD294477: tbb::internal::market::process(rml::job&) (market.cpp:702)
+==572459==    by 0xD290A1F: tbb::internal::rml::private_worker::run() (private_server.cpp:266)
+==572459==    by 0xD290C8C: tbb::internal::rml::private_worker::thread_routine(void*) (private_server.cpp:219)
+==572459==    by 0x119A3B42: start_thread (pthread_create.c:442)
+==572459==    by 0x11A34BB3: clone (clone.S:100)
+client stack range: [0x1F853000 0x1FC0AFFF] client SP: 0x1FC0A7E8
+valgrind stack range: [0x1014A45000 0x1014B44FFF] top usage: 5472 of 1048576
+
+Thread 8: status = VgTs_Init (lwpid 0)
+==572459==    at 0x11A34BA6: clone (clone.S:83)
+==572459==    by 0x119A384F: ??? (pthread_create.c:321)
+==572459==    by 0x54798FFF: ???
+client stack range: [0x5439A000 0x54751FFF] client SP: 0x547519B0
+valgrind stack range: [0x1014CBE000 0x1014DBDFFF] top usage: 552 of 1048576
+
+Thread 9: status = VgTs_Init (lwpid 0)
+==572459==    at 0x11A34BA6: clone (clone.S:83)
+==572459==    by 0x119A384F: ??? (pthread_create.c:321)
+==572459==    by 0x54B99FFF: ???
+client stack range: [0x5479B000 0x54B52FFF] client SP: 0x54B529B0
+valgrind stack range: [0x1014EC2000 0x1014FC1FFF] top usage: 552 of 1048576
+
+Thread 10: status = VgTs_WaitSys syscall 24 (lwpid 572879)
+==572459==    at 0x11A17CAB: sched_yield (syscall-template.S:120)
+==572459==    by 0xD29B0E4: tbb::internal::custom_scheduler<tbb::internal::IntelSchedulerTraits>::receive_or_steal_task(long&, long) (custom_scheduler.h:285)
+==572459==    by 0xD295D45: tbb::internal::arena::process(tbb::internal::generic_scheduler&) (arena.cpp:151)
+==572459==    by 0xD294477: tbb::internal::market::process(rml::job&) (market.cpp:702)
+==572459==    by 0xD290A1F: tbb::internal::rml::private_worker::run() (private_server.cpp:266)
+==572459==    by 0xD290C8C: tbb::internal::rml::private_worker::thread_routine(void*) (private_server.cpp:219)
+==572459==    by 0x119A3B42: start_thread (pthread_create.c:442)
+==572459==    by 0x11A34BB3: clone (clone.S:100)
+client stack range: [0x54B9C000 0x54F53FFF] client SP: 0x54F537E8
+valgrind stack range: [0x1015502000 0x1015601FFF] top usage: 5472 of 1048576
+
+Thread 11: status = VgTs_WaitSys syscall 24 (lwpid 572881)
+==572459==    at 0x11A17CAB: sched_yield (syscall-template.S:120)
+==572459==    by 0xD29B0E4: tbb::internal::custom_scheduler<tbb::internal::IntelSchedulerTraits>::receive_or_steal_task(long&, long) (custom_scheduler.h:285)
+==572459==    by 0xD295D45: tbb::internal::arena::process(tbb::internal::generic_scheduler&) (arena.cpp:151)
+==572459==    by 0xD294477: tbb::internal::market::process(rml::job&) (market.cpp:702)
+==572459==    by 0xD290A1F: tbb::internal::rml::private_worker::run() (private_server.cpp:266)
+==572459==    by 0xD290C8C: tbb::internal::rml::private_worker::thread_routine(void*) (private_server.cpp:219)
+==572459==    by 0x119A3B42: start_thread (pthread_create.c:442)
+==572459==    by 0x11A34BB3: clone (clone.S:100)
+client stack range: [0x54F9D000 0x55354FFF] client SP: 0x553547E8
+valgrind stack range: [0x1015706000 0x1015805FFF] top usage: 5472 of 1048576
+
+Thread 12: status = VgTs_Yielding (lwpid 572882)
+==572459==    at 0xD29AFAA: __TBB_machine_pause (gcc_ia32_common.h:45)
+==572459==    by 0xD29AFAA: bounded_pause (tbb_machine.h:373)
+==572459==    by 0xD29AFAA: prolonged_pause (scheduler_common.h:305)
+==572459==    by 0xD29AFAA: tbb::internal::custom_scheduler<tbb::internal::IntelSchedulerTraits>::receive_or_steal_task(long&, long) (custom_scheduler.h:277)
+==572459==    by 0xD295D45: tbb::internal::arena::process(tbb::internal::generic_scheduler&) (arena.cpp:151)
+==572459==    by 0xD294477: tbb::internal::market::process(rml::job&) (market.cpp:702)
+==572459==    by 0xD290A1F: tbb::internal::rml::private_worker::run() (private_server.cpp:266)
+==572459==    by 0xD290C8C: tbb::internal::rml::private_worker::thread_routine(void*) (private_server.cpp:219)
+==572459==    by 0x119A3B42: start_thread (pthread_create.c:442)
+==572459==    by 0x11A34BB3: clone (clone.S:100)
+client stack range: [0x5539E000 0x55755FFF] client SP: 0x557557F0
+valgrind stack range: [0x101590A000 0x1015A09FFF] top usage: 5472 of 1048576
+
+Thread 13: status = VgTs_WaitSys syscall 24 (lwpid 572883)
+==572459==    at 0x11A17CAB: sched_yield (syscall-template.S:120)
+==572459==    by 0xD29B0E4: tbb::internal::custom_scheduler<tbb::internal::IntelSchedulerTraits>::receive_or_steal_task(long&, long) (custom_scheduler.h:285)
+==572459==    by 0xD295D45: tbb::internal::arena::process(tbb::internal::generic_scheduler&) (arena.cpp:151)
+==572459==    by 0xD294477: tbb::internal::market::process(rml::job&) (market.cpp:702)
+==572459==    by 0xD290A1F: tbb::internal::rml::private_worker::run() (private_server.cpp:266)
+==572459==    by 0xD290C8C: tbb::internal::rml::private_worker::thread_routine(void*) (private_server.cpp:219)
+==572459==    by 0x119A3B42: start_thread (pthread_create.c:442)
+==572459==    by 0x11A34BB3: clone (clone.S:100)
+client stack range: [0x5579F000 0x55B56FFF] client SP: 0x55B567E8
+valgrind stack range: [0x1015B0E000 0x1015C0DFFF] top usage: 5472 of 1048576
+
+Thread 14: status = VgTs_Init (lwpid 0)
+==572459==    at 0x11A34BA6: clone (clone.S:83)
+==572459==    by 0x119A384F: ??? (pthread_create.c:321)
+==572459==    by 0x55F9EFFF: ???
+client stack range: [0x55BA0000 0x55F57FFF] client SP: 0x55F579B0
+valgrind stack range: [0x1015D12000 0x1015E11FFF] top usage: 552 of 1048576
+
+Thread 15: status = VgTs_WaitSys syscall 24 (lwpid 572885)
+==572459==    at 0x11A17CAB: sched_yield (syscall-template.S:120)
+==572459==    by 0xD29B0E4: tbb::internal::custom_scheduler<tbb::internal::IntelSchedulerTraits>::receive_or_steal_task(long&, long) (custom_scheduler.h:285)
+==572459==    by 0xD295D45: tbb::internal::arena::process(tbb::internal::generic_scheduler&) (arena.cpp:151)
+==572459==    by 0xD294477: tbb::internal::market::process(rml::job&) (market.cpp:702)
+==572459==    by 0xD290A1F: tbb::internal::rml::private_worker::run() (private_server.cpp:266)
+==572459==    by 0xD290C8C: tbb::internal::rml::private_worker::thread_routine(void*) (private_server.cpp:219)
+==572459==    by 0x119A3B42: start_thread (pthread_create.c:442)
+==572459==    by 0x11A34BB3: clone (clone.S:100)
+client stack range: [0x55FA1000 0x56358FFF] client SP: 0x563587E8
+valgrind stack range: [0x1015F1A000 0x1016019FFF] top usage: 5472 of 1048576
+
+Thread 16: status = VgTs_Init (lwpid 0)
+==572459==    at 0x11A34BA6: clone (clone.S:83)
+==572459==    by 0x119A384F: ??? (pthread_create.c:321)
+==572459==    by 0x567A0FFF: ???
+client stack range: [0x563A2000 0x56759FFF] client SP: 0x567599B0
+valgrind stack range: [0x101611E000 0x101621DFFF] top usage: 552 of 1048576
+
+Thread 17: status = VgTs_Init (lwpid 0)
+==572459==    at 0x11A34BA6: clone (clone.S:83)
+==572459==    by 0x119A384F: ??? (pthread_create.c:321)
+==572459==    by 0x56BA1FFF: ???
+client stack range: [0x567A3000 0x56B5AFFF] client SP: 0x56B5A9B0
+valgrind stack range: [0x1016322000 0x1016421FFF] top usage: 552 of 1048576
+
+Thread 18: status = VgTs_Init (lwpid 0)
+==572459==    at 0x11A34BA6: clone (clone.S:83)
+==572459==    by 0x119A384F: ??? (pthread_create.c:321)
+==572459==    by 0x56FA2FFF: ???
+client stack range: [0x56BA4000 0x56F5BFFF] client SP: 0x56F5B9B0
+valgrind stack range: [0x1016526000 0x1016625FFF] top usage: 552 of 1048576
+
+Thread 19: status = VgTs_WaitSys syscall 24 (lwpid 572889)
+==572459==    at 0x11A17CAB: sched_yield (syscall-template.S:120)
+==572459==    by 0xD29B0E4: tbb::internal::custom_scheduler<tbb::internal::IntelSchedulerTraits>::receive_or_steal_task(long&, long) (custom_scheduler.h:285)
+==572459==    by 0xD295D45: tbb::internal::arena::process(tbb::internal::generic_scheduler&) (arena.cpp:151)
+==572459==    by 0xD294477: tbb::internal::market::process(rml::job&) (market.cpp:702)
+==572459==    by 0xD290A1F: tbb::internal::rml::private_worker::run() (private_server.cpp:266)
+==572459==    by 0xD290C8C: tbb::internal::rml::private_worker::thread_routine(void*) (private_server.cpp:219)
+==572459==    by 0x119A3B42: start_thread (pthread_create.c:442)
+==572459==    by 0x11A34BB3: clone (clone.S:100)
+client stack range: [0x56FA5000 0x5735CFFF] client SP: 0x5735C7E8
+valgrind stack range: [0x101672A000 0x1016829FFF] top usage: 5472 of 1048576
+
+Thread 20: status = VgTs_Init (lwpid 0)
+==572459==    at 0x11A34BA6: clone (clone.S:83)
+==572459==    by 0x119A384F: ??? (pthread_create.c:321)
+==572459==    by 0x577A4FFF: ???
+client stack range: [0x573A6000 0x5775DFFF] client SP: 0x5775D9B0
+valgrind stack range: [0x101692E000 0x1016A2DFFF] top usage: 552 of 1048576
+
+Thread 21: status = VgTs_WaitSys syscall 24 (lwpid 572891)
+==572459==    at 0x11A17CAB: sched_yield (syscall-template.S:120)
+==572459==    by 0xD29B0E4: tbb::internal::custom_scheduler<tbb::internal::IntelSchedulerTraits>::receive_or_steal_task(long&, long) (custom_scheduler.h:285)
+==572459==    by 0xD295D45: tbb::internal::arena::process(tbb::internal::generic_scheduler&) (arena.cpp:151)
+==572459==    by 0xD294477: tbb::internal::market::process(rml::job&) (market.cpp:702)
+==572459==    by 0xD290A1F: tbb::internal::rml::private_worker::run() (private_server.cpp:266)
+==572459==    by 0xD290C8C: tbb::internal::rml::private_worker::thread_routine(void*) (private_server.cpp:219)
+==572459==    by 0x119A3B42: start_thread (pthread_create.c:442)
+==572459==    by 0x11A34BB3: clone (clone.S:100)
+client stack range: [0x577A7000 0x57B5EFFF] client SP: 0x57B5E7E8
+valgrind stack range: [0x1016B32000 0x1016C31FFF] top usage: 5472 of 1048576
+
+Thread 22: status = VgTs_Init (lwpid 0)
+==572459==    at 0x11A34BA6: clone (clone.S:83)
+==572459==    by 0x119A384F: ??? (pthread_create.c:321)
+==572459==    by 0x57FA6FFF: ???
+client stack range: [0x57BA8000 0x57F5FFFF] client SP: 0x57F5F9B0
+valgrind stack range: [0x1016D36000 0x1016E35FFF] top usage: 552 of 1048576
+
+Thread 23: status = VgTs_Init (lwpid 0)
+==572459==    at 0x11A34BA6: clone (clone.S:83)
+==572459==    by 0x119A384F: ??? (pthread_create.c:321)
+==572459==    by 0x5A086FFF: ???
+client stack range: [0x59C88000 0x5A03FFFF] client SP: 0x5A03F9B0
+valgrind stack range: [0x1016F3E000 0x101703DFFF] top usage: 552 of 1048576
+
+Thread 24: status = VgTs_Init (lwpid 0)
+==572459==    at 0x11A34BA6: clone (clone.S:83)
+==572459==    by 0x119A384F: ??? (pthread_create.c:321)
+==572459==    by 0x5A487FFF: ???
+client stack range: [0x5A089000 0x5A440FFF] client SP: 0x5A4409B0
+valgrind stack range: [0x1017142000 0x1017241FFF] top usage: 552 of 1048576
+
+Thread 25: status = VgTs_Init (lwpid 0)
+==572459==    at 0x11A34BA6: clone (clone.S:83)
+==572459==    by 0x119A384F: ??? (pthread_create.c:321)
+==572459==    by 0x5A888FFF: ???
+client stack range: [0x5A48A000 0x5A841FFF] client SP: 0x5A8419B0
+valgrind stack range: [0x1017346000 0x1017445FFF] top usage: 552 of 1048576
+
+Thread 26: status = VgTs_Init (lwpid 0)
+==572459==    at 0x11A34BA6: clone (clone.S:83)
+==572459==    by 0x119A384F: ??? (pthread_create.c:321)
+==572459==    by 0x73089FFF: ???
+client stack range: [0x7288B000 0x73042FFF] client SP: 0x730429B0
+valgrind stack range: [0x1019BE6000 0x1019CE5FFF] top usage: 552 of 1048576
+
+
+Note: see also the FAQ in the source distribution.
+It contains workarounds to several common problems.
+In particular, if Valgrind aborted or crashed after
+identifying problems in your program, there's a good chance
+that fixing those problems will prevent Valgrind aborting or
+crashing, especially if it happened in m_mallocfree.c.
+
+If that doesn't help, please report this bug to: www.valgrind.org
+
+In the bug report, send all the above text, the valgrind
+version, and what OS and version you are using.  Thanks.
