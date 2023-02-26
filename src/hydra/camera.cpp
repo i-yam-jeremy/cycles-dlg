@@ -288,7 +288,10 @@ void HdCyclesCamera::ApplyCameraSettings(HdRenderParam *renderParam,
     cam->set_camera_type(CAMERA_PERSPECTIVE);
   }
 
-  const float metersPerUnit = static_cast<HdCyclesSession *>(renderParam)->GetStageMetersPerUnit();
+  const float metersPerUnit =
+      (renderParam == nullptr) ?
+          0.01f :
+          static_cast<HdCyclesSession *>(renderParam)->GetStageMetersPerUnit();
 
   auto viewplane = data.GetFrustum().GetWindow();
   auto focalLength = 1.0f;

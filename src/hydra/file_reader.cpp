@@ -52,6 +52,20 @@ class DummyHdTask : public HdTask {
   TfTokenVector tags;
 };
 
+namespace {
+void convertFromUSD(ccl::Scene *scene, UsdStageRefPtr stage)
+{
+  for (UsdPrim const &prim : stage->Traverse()) {
+    std::cout << prim.GetPath().GetAsString() << std::endl;
+    if (prim.IsA<UsdGeomCamera>()) {
+      HdCyclesCamera camera(prim.GetPath());
+      std::cout << "Camera: " << prim.GetPath().GetAsString().c_str() << std::endl;
+      camera.ApplyCameraSettings(nullptr, scene->camera);
+    }
+  }
+}
+}  // namespace
+
 void HdCyclesFileReader::read(Session *session, const char *filepath, const bool use_camera)
 {
   /* Initialize USD. */
@@ -64,63 +78,66 @@ void HdCyclesFileReader::read(Session *session, const char *filepath, const bool
     return;
   }
 
-  /* Init paths. */
-  SdfPath root_path = SdfPath::AbsoluteRootPath();
-  SdfPath task_path("/_hdCycles/DummyHdTask");
+  convertFromUSD(session->scene, stage);
 
-  /* Create render delegate. */
-  HdRenderSettingsMap settings_map;
-  settings_map.insert(std::make_pair(HdCyclesRenderSettingsTokens->stageMetersPerUnit,
-                                     VtValue(UsdGeomGetStageMetersPerUnit(stage))));
+  //   /* Init paths. */
+  //   SdfPath root_path = SdfPath::AbsoluteRootPath();
+  //   SdfPath task_path("/_hdCycles/DummyHdTask");
 
-  HdCyclesDelegate render_delegate(settings_map, session, true);
+  //   /* Create render delegate. */
+  //   HdRenderSettingsMap settings_map;
+  //   settings_map.insert(std::make_pair(HdCyclesRenderSettingsTokens->stageMetersPerUnit,
+  //                                      VtValue(UsdGeomGetStageMetersPerUnit(stage))));
 
-  /* Create render index and scene delegate. */
-  unique_ptr<HdRenderIndex> render_index(HdRenderIndex::New(&render_delegate, {}));
-  std::cout << root_path << ", " << filepath << std::endl;
-  unique_ptr<UsdImagingDelegate> scene_delegate = make_unique<UsdImagingDelegate>(
-      render_index.get(), root_path);
+  //   HdCyclesDelegate render_delegate(settings_map, session, true);
 
-  /* Add render tags and collection to render index. */
-  HdRprimCollection collection(HdTokens->geometry, HdReprSelector(HdReprTokens->smoothHull));
-  collection.SetRootPath(root_path);
+  //   /* Create render index and scene delegate. */
+  //   unique_ptr<HdRenderIndex> render_index(HdRenderIndex::New(&render_delegate, {}));
+  //   std::cout << root_path << ", " << filepath << std::endl;
+  //   unique_ptr<UsdImagingDelegate> scene_delegate = make_unique<UsdImagingDelegate>(
+  //       render_index.get(), root_path);
+  //   std::exit(0);
 
-  render_index->InsertTask<DummyHdTask>(scene_delegate.get(), task_path);
+  //   /* Add render tags and collection to render index. */
+  //   HdRprimCollection collection(HdTokens->geometry, HdReprSelector(HdReprTokens->smoothHull));
+  //   collection.SetRootPath(root_path);
 
-#if PXR_VERSION < 2111
-  HdDirtyListSharedPtr dirty_list = std::make_shared<HdDirtyList>(collection,
-                                                                  *(render_index.get()));
-  render_index->EnqueuePrimsToSync(dirty_list, collection);
-#else
-  render_index->EnqueueCollectionToSync(collection);
-#endif
+  //   // render_index->InsertTask<DummyHdTask>(scene_delegate.get(), task_path);
 
-  /* Create prims. */
-  const UsdPrim &stage_root = stage->GetPseudoRoot();
-  scene_delegate->Populate(stage_root.GetStage()->GetPrimAtPath(root_path), {});
+  // #if PXR_VERSION < 2111
+  //   HdDirtyListSharedPtr dirty_list = std::make_shared<HdDirtyList>(collection,
+  //                                                                   *(render_index.get()));
+  //   render_index->EnqueuePrimsToSync(dirty_list, collection);
+  // #else
+  //   render_index->EnqueueCollectionToSync(collection);
+  // #endif
 
-  /* Sync prims. */
-  HdTaskContext task_context;
-  HdTaskSharedPtrVector tasks;
-  tasks.push_back(render_index->GetTask(task_path));
+  //   /* Create prims. */
+  //   const UsdPrim &stage_root = stage->GetPseudoRoot();
+  //   // scene_delegate->Populate(stage_root.GetStage()->GetPrimAtPath(root_path), {});
 
-  render_index->SyncAll(&tasks, &task_context);
-  render_delegate.CommitResources(&render_index->GetChangeTracker());
+  //   /* Sync prims. */
+  //   HdTaskContext task_context;
+  //   HdTaskSharedPtrVector tasks;
+  //   tasks.push_back(render_index->GetTask(task_path));
 
-  /* Use first camera in stage.
-   * TODO: get camera from UsdRender if available. */
-  if (use_camera) {
-    for (UsdPrim const &prim : stage->Traverse()) {
-      if (prim.IsA<UsdGeomCamera>()) {
-        HdSprim *sprim = render_index->GetSprim(HdPrimTypeTokens->camera, prim.GetPath());
-        if (sprim) {
-          HdCyclesCamera *camera = dynamic_cast<HdCyclesCamera *>(sprim);
-          camera->ApplyCameraSettings(render_delegate.GetRenderParam(), session->scene->camera);
-          break;
-        }
-      }
-    }
-  }
+  //   render_index->SyncAll(&tasks, &task_context);
+  //   render_delegate.CommitResources(&render_index->GetChangeTracker());
+
+  //   /* Use first camera in stage.
+  //    * TODO: get camera from UsdRender if available. */
+  //   if (use_camera) {
+  //     for (UsdPrim const &prim : stage->Traverse()) {
+  //       if (prim.IsA<UsdGeomCamera>()) {
+  //         HdSprim *sprim = render_index->GetSprim(HdPrimTypeTokens->camera, prim.GetPath());
+  //         if (sprim) {
+  //           HdCyclesCamera *camera = dynamic_cast<HdCyclesCamera *>(sprim);
+  //           camera->ApplyCameraSettings(render_delegate.GetRenderParam(),
+  //           session->scene->camera); break;
+  //         }
+  //       }
+  //     }
+  //   }
 }
 
 HDCYCLES_NAMESPACE_CLOSE_SCOPE
