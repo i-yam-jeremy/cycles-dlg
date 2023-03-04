@@ -8,6 +8,8 @@ CCL_NAMESPACE_BEGIN
 
 class Scene;
 
+#include <string>
+
 void xml_read_file(Scene *scene, const char *filepath);
 void xmlReadFromString(Scene *scene, std::string const &data);
 

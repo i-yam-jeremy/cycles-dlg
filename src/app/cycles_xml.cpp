@@ -370,8 +370,6 @@ static void xml_read_shader_graph(XMLReadState &state, Shader *shader, xml_node 
 
   shader->set_graph(graph);
   shader->tag_update(state.scene);
-
-  graph->dump_graph((graph_node.name() + std::string(".txt")).c_str());
 }
 
 static void xml_read_shader(XMLReadState &state, xml_node node)

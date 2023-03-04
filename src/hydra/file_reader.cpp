@@ -16,7 +16,11 @@
 #include "scene/shader_graph.h"
 #include "scene/shader_nodes.h"
 
+#include "app/cycles_xml.h"
+
 #include <glm/glm.hpp>
+#include <glm/gtx/transform.hpp>
+
 #include <pxr/base/plug/registry.h>
 #include <pxr/imaging/hd/dirtyList.h>
 #include <pxr/imaging/hd/renderDelegate.h>
@@ -199,91 +203,53 @@ void traverseUsd(ccl::Scene *scene, UsdPrim const &prim, glm::mat4 xform, Node *
   }
 }
 
-Shader *createMeshShader(ccl::Scene *scene)
+void initBaseScene(Scene *scene)
 {
-  Shader *shader = new Shader();
+  const auto sceneXml = R"(
+    <cycles>
+    <!-- Camera -->
+    <camera width="800" height="500" />
 
-  ShaderGraph *graph = new ShaderGraph();
+    <transform translate="1.5 2 -8" scale="1 1 1">
+      <camera type="perspective" />
+    </transform>
 
-  // auto *diffuseBsdf = graph->create_node<DiffuseBsdfNode>();
-  // diffuseBsdf->set_roughness(0.5f);
-  // graph->add(diffuseBsdf);
-
-  auto *diffuseBsdf = graph->create_node<EmissionNode>();
-  diffuseBsdf->set_color({1.f, 1.f, 0.f});
-  graph->add(diffuseBsdf);
-
-  auto *outputNode = graph->create_node<OutputNode>();
-  graph->add(outputNode);
-
-  graph->connect(diffuseBsdf->outputs[0], outputNode->inputs[0] /*surface output*/);
-
-  shader->set_graph(graph);
-  shader->tag_update(scene);
-
-  scene->shaders.push_back(shader);
-
-  return shader;
-}
-
-Shader *createBackgroundShader(ccl::Scene *scene)
-{
-  shaderFromXML(R"(
+    <!-- Background Shader -->
     <background>
-      <background name="bg" strength="2.0" color="0.2, 0.2, 0.2" />
+      <sky_texture name="tex" sky_type="hosek_wilkie" />
+      <background name="bg" strength="20.0" />
+      
+      <connect from="tex color" to="bg color" />
       <connect from="bg background" to="output surface" />
     </background>
-  )");
-  Shader *shader = new Shader();
 
-  ShaderGraph *graph = new ShaderGraph();
+    <!-- Monkey Shader -->
+    <shader name="monkey">
+      <noise_texture name="tex" scale="2.0"/>
+      <glass_bsdf name="monkey_closure" distribution="beckmann" IOR="1.4" roughness="0.5" />
+      <connect from="tex color" to="monkey_closure color" />
+      <connect from="monkey_closure bsdf" to="output surface" />
+    </shader>
 
-  auto *skyTextureNode = graph->create_node<SkyTextureNode>();
-  skyTextureNode->set_sky_type(NodeSkyType::NODE_SKY_HOSEK);
-  graph->add(skyTextureNode);
-
-  auto *backgroundNode = graph->create_node<BackgroundNode>();
-  backgroundNode->set_strength(8.0f);
-  graph->add(backgroundNode);
-
-  auto *outputNode = graph->create_node<OutputNode>();
-  graph->add(outputNode);
-
-  graph->connect(skyTextureNode->outputs[0], backgroundNode->inputs[0]);
-  graph->connect(backgroundNode->outputs[0], outputNode->inputs[0]);
-
-  shader->set_graph(graph);
-  shader->tag_update(scene);
-
-  scene->shaders.push_back(shader);
-
-  return shader;
-}
-
-void createDefaultCamera(Scene *scene)
-{
-  Camera *cam = scene->camera;
-  cam->set_full_width(800);
-  cam->set_full_width(500);
-
-  glm::mat4 m(1.0f);
-  const auto transpose = glm::transpose(m);
-  Transform tfm;
-  memcpy(&tfm, &transpose[0][0], sizeof(tfm));
-
-  cam->set_matrix(tfm);
-  cam->need_flags_update = true;
-  cam->update(scene);
+    <!-- Floor Shader -->
+    <shader name="floor">
+      <checker_texture name="checker" color1="0.8, 0.8, 0.8" color2="1.0, 0.1, 0.1" />
+      <glossy_bsdf name="floor_closure" distribution="beckmann" roughness="0.2"/>
+      <connect from="checker color" to="floor_closure color" />
+      <connect from="floor_closure bsdf" to="output surface" />
+    </shader>
+    </cycles>
+  )";
+  xmlReadFromString(scene, sceneXml);
 }
 
 void convertFromUSD(ccl::Scene *scene, UsdStageRefPtr stage)
 {
-  createDefaultCamera(scene);  // Overriden by cameras in the USD file, if any are present
-  auto *meshShader = createMeshShader(scene);
-  scene->default_background = createBackgroundShader(scene);
-  scene->background->set_use_shader(true);
-  scene->background->set_shader(scene->default_background);
-  traverseUsd(scene, stage->GetPseudoRoot(), glm::mat4(1.0f), scene->default_surface);
+  initBaseScene(scene);
+  glm::mat4 baseUsdTransform = glm::scale(
+      glm::rotate(glm::mat4(0.01f), static_cast<float>(M_PI / 2.f), glm::vec3(1, 0, 0)),
+      glm::vec3(1, 1, -1));
+  traverseUsd(scene, stage->GetPseudoRoot(), baseUsdTransform, scene->default_surface);
 }
 
 void HdCyclesFileReader::read(Session *session, const char *filepath, const bool use_camera)
