@@ -8,9 +8,13 @@
 #include "util/path.h"
 #include "util/unique_ptr.h"
 
+#include "scene/background.h"
+#include "scene/camera.h"
 #include "scene/mesh.h"
 #include "scene/object.h"
 #include "scene/scene.h"
+#include "scene/shader_graph.h"
+#include "scene/shader_nodes.h"
 
 #include <glm/glm.hpp>
 #include <pxr/base/plug/registry.h>
@@ -57,7 +61,10 @@ class DummyHdTask : public HdTask {
   TfTokenVector tags;
 };
 
-void readMesh(ccl::Scene *scene, UsdGeomMesh const &usdMesh, glm::mat4 const &xform)
+void readMesh(ccl::Scene *scene,
+              UsdGeomMesh const &usdMesh,
+              glm::mat4 const &xform,
+              Node *meshShader)
 {
   /* create mesh */
   Mesh *mesh = new Mesh();
@@ -72,9 +79,9 @@ void readMesh(ccl::Scene *scene, UsdGeomMesh const &usdMesh, glm::mat4 const &xf
   object->set_tfm(tfm);
   scene->objects.push_back(object);
 
-  // array<Node *> used_shaders = mesh->get_used_shaders();
-  // used_shaders.push_back_slow(state.shader);
-  // mesh->set_used_shaders(used_shaders);
+  array<Node *> used_shaders = mesh->get_used_shaders();
+  used_shaders.push_back_slow(meshShader);
+  mesh->set_used_shaders(used_shaders);
 
   /* read state */
   int shader = 0;
@@ -166,29 +173,117 @@ void updateXform(glm::mat4 &xform, UsdGeomXform const &xformPrim)
   xform *= M;
 }
 
-void traverseUsd(ccl::Scene *scene, UsdPrim const &prim, glm::mat4 xform)
+void traverseUsd(ccl::Scene *scene, UsdPrim const &prim, glm::mat4 xform, Node *meshShader)
 {
   std::cout << prim.GetPath().GetAsString() << ": " << prim.GetTypeName().GetString() << std::endl;
   if (prim.IsA<UsdGeomCamera>()) {
     HdCyclesCamera camera(prim.GetPath());
     std::cout << "Camera: " << prim.GetPath().GetAsString().c_str() << std::endl;
     camera.ApplyCameraSettings(nullptr, scene->camera);
+    scene->camera->need_flags_update = true;
+    scene->camera->update(scene);
   }
   else if (UsdGeomMesh mesh = UsdGeomMesh(prim)) {
-    readMesh(scene, mesh, xform);
+    readMesh(scene, mesh, xform, meshShader);
   }
   else if (UsdGeomXform xformPrim = UsdGeomXform(prim)) {
     updateXform(xform, xformPrim);
   }
+  else if (prim.GetTypeName().size() > 0) {
+    std::cerr << "Unsupported USD node type: " << prim.GetTypeName() << std::endl;
+    std::exit(1);
+  }
 
   for (const auto &child : prim.GetChildren()) {
-    traverseUsd(scene, child, xform);
+    traverseUsd(scene, child, xform, meshShader);
   }
+}
+
+Shader *createMeshShader(ccl::Scene *scene)
+{
+  Shader *shader = new Shader();
+
+  ShaderGraph *graph = new ShaderGraph();
+
+  // auto *diffuseBsdf = graph->create_node<DiffuseBsdfNode>();
+  // diffuseBsdf->set_roughness(0.5f);
+  // graph->add(diffuseBsdf);
+
+  auto *diffuseBsdf = graph->create_node<EmissionNode>();
+  diffuseBsdf->set_color({1.f, 1.f, 0.f});
+  graph->add(diffuseBsdf);
+
+  auto *outputNode = graph->create_node<OutputNode>();
+  graph->add(outputNode);
+
+  graph->connect(diffuseBsdf->outputs[0], outputNode->inputs[0] /*surface output*/);
+
+  shader->set_graph(graph);
+  shader->tag_update(scene);
+
+  scene->shaders.push_back(shader);
+
+  return shader;
+}
+
+Shader *createBackgroundShader(ccl::Scene *scene)
+{
+  shaderFromXML(R"(
+    <background>
+      <background name="bg" strength="2.0" color="0.2, 0.2, 0.2" />
+      <connect from="bg background" to="output surface" />
+    </background>
+  )");
+  Shader *shader = new Shader();
+
+  ShaderGraph *graph = new ShaderGraph();
+
+  auto *skyTextureNode = graph->create_node<SkyTextureNode>();
+  skyTextureNode->set_sky_type(NodeSkyType::NODE_SKY_HOSEK);
+  graph->add(skyTextureNode);
+
+  auto *backgroundNode = graph->create_node<BackgroundNode>();
+  backgroundNode->set_strength(8.0f);
+  graph->add(backgroundNode);
+
+  auto *outputNode = graph->create_node<OutputNode>();
+  graph->add(outputNode);
+
+  graph->connect(skyTextureNode->outputs[0], backgroundNode->inputs[0]);
+  graph->connect(backgroundNode->outputs[0], outputNode->inputs[0]);
+
+  shader->set_graph(graph);
+  shader->tag_update(scene);
+
+  scene->shaders.push_back(shader);
+
+  return shader;
+}
+
+void createDefaultCamera(Scene *scene)
+{
+  Camera *cam = scene->camera;
+  cam->set_full_width(800);
+  cam->set_full_width(500);
+
+  glm::mat4 m(1.0f);
+  const auto transpose = glm::transpose(m);
+  Transform tfm;
+  memcpy(&tfm, &transpose[0][0], sizeof(tfm));
+
+  cam->set_matrix(tfm);
+  cam->need_flags_update = true;
+  cam->update(scene);
 }
 
 void convertFromUSD(ccl::Scene *scene, UsdStageRefPtr stage)
 {
-  traverseUsd(scene, stage->GetPseudoRoot(), glm::mat4(1.0f));
+  createDefaultCamera(scene);  // Overriden by cameras in the USD file, if any are present
+  auto *meshShader = createMeshShader(scene);
+  scene->default_background = createBackgroundShader(scene);
+  scene->background->set_use_shader(true);
+  scene->background->set_shader(scene->default_background);
+  traverseUsd(scene, stage->GetPseudoRoot(), glm::mat4(1.0f), scene->default_surface);
 }
 
 void HdCyclesFileReader::read(Session *session, const char *filepath, const bool use_camera)

@@ -370,6 +370,8 @@ static void xml_read_shader_graph(XMLReadState &state, Shader *shader, xml_node 
 
   shader->set_graph(graph);
   shader->tag_update(state.scene);
+
+  graph->dump_graph((graph_node.name() + std::string(".txt")).c_str());
 }
 
 static void xml_read_shader(XMLReadState &state, xml_node node)
@@ -721,6 +723,37 @@ void xml_read_file(Scene *scene, const char *filepath)
   state.base = path_dirname(filepath);
 
   xml_read_include(state, path_filename(filepath));
+
+  scene->params.bvh_type = BVH_TYPE_STATIC;
+}
+
+void xmlReadFromString(Scene *scene, std::string const &data)
+{
+  XMLReadState state;
+
+  state.scene = scene;
+  state.tfm = transform_identity();
+  state.shader = scene->default_surface;
+  state.smooth = false;
+  state.dicing_rate = 1.0f;
+  state.base = "<IN_MEMORY_XML>";
+
+  /* open XML document */
+  xml_document doc;
+  xml_parse_result parse_result;
+
+  parse_result = doc.load_buffer(data.c_str(), data.size());
+
+  if (parse_result) {
+    XMLReadState substate = state;
+
+    xml_node cycles = doc.child("cycles");
+    xml_read_scene(substate, cycles);
+  }
+  else {
+    fprintf(stderr, "%s read error: %s\n", data.c_str(), parse_result.description());
+    exit(EXIT_FAILURE);
+  }
 
   scene->params.bvh_type = BVH_TYPE_STATIC;
 }
