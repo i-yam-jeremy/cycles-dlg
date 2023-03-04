@@ -483,7 +483,7 @@ result<void, Err> glow::optix::OptixManager::updateAS(
 
   {
     DevicePtr<char> deviceTempBuffer(
-        bufferSizes.tempSizeInBytes,
+        bufferSizes.tempUpdateSizeInBytes,
         stream);  // Inner scope so this temp buffer is freed as soon as possible
     if (deviceTempBuffer.rawPtr() == nullptr) {
       return failure(std::make_shared<glow::util::monad::Error>("Memory allocation"));

@@ -299,8 +299,8 @@ OptiXDevice::OptiXDevice(const DeviceInfo &info, Stats &stats, Profiler &profile
   demandLoadingGeometry::Options dlgOptions{
       .maxPartitionInstanceCount = 1000000,
       .maxMemory = 33 * GB,
-      .maxActiveRayCount =
-          1024  * 512  * 8 * 8,  // TODO (jberchtold) set actual upper bound here
+      .maxActiveRayCount = 1024 *
+                           512 /* * 8 * 8*/,  // TODO (jberchtold) set actual upper bound here
       .greedyLoading = false,
       .instancePartitionerType = InstancePartitionerType::OCTREE};
   m_geoDemandLoader = std::shared_ptr<demandLoadingGeometry::GeometryDemandLoader>(
@@ -486,7 +486,7 @@ bool OptiXDevice::load_kernels(const uint kernel_features)
   /* Default to no motion blur and two-level graph, since it is the fastest option. */
   pipeline_options.usesMotionBlur = false;
   pipeline_options.traversableGraphFlags = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_ANY;
-  pipeline_options.numPayloadValues = 8 + 2/*for DLG ray stalling*/;
+  pipeline_options.numPayloadValues = 8 + 2 /*for DLG ray stalling*/;
   pipeline_options.numAttributeValues = 2; /* u, v */
   pipeline_options.exceptionFlags = OPTIX_EXCEPTION_FLAG_NONE;
   pipeline_options.pipelineLaunchParamsVariableName = "kernel_params"; /* See globals.h */
@@ -1959,10 +1959,10 @@ void OptiXDevice::build_bvh(BVH *bvh, Progress &progress, bool refit)
       }
 
       if (isDLGCompatible(ob->get_geometry()->geometry_type)) {
-        std::cout << "FOUND INSTANCE: \n";
+        // std::cout << "FOUND INSTANCE: \n";
         demandLoadingGeometry::AffineXform xform(glm::mat4(1));
         if (ob->get_geometry()->is_instanced()) {
-          std::cout << "Instanced geo\n";
+          // std::cout << "Instanced geo\n";
           /* Set transform matrix. */
           memcpy(xform.data, &ob->get_tfm(), sizeof(xform.data));
         }

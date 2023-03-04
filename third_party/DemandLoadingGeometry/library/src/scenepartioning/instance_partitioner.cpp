@@ -199,7 +199,6 @@ void InstancePartitioner::subdivideChunk(
     int depth,
     std::function<void(const std::shared_ptr<glow::pipeline::render::Chunk>)> callback)
 {
-
   std::vector<std::shared_ptr<Chunk>> chunks;
   std::unordered_set<OptixAabb, OptixAabbHash, OptixAabbEq> usedChunkAabbs;
 
@@ -251,9 +250,16 @@ void InstancePartitioner::subdivideChunk(
   {
     std::vector<OptixAabb> meshAabbVec(m_meshAabbs.size());
     for (const auto &entry : m_meshAabbs) {
+      if (entry.first >= meshAabbVec.size()) {
+        std::cerr << "AABB entry index out of bounds: " << entry.first << "/" << meshAabbVec.size()
+                  << std::endl;
+        std::exit(1);
+      }
       meshAabbVec[entry.first] = entry.second;
     }
     d_meshAabbs.write(meshAabbVec.data());
+    CUDA_CHECK(cudaStreamSynchronize(
+        stream));  // Need to sync here so meshAabbVec doesn't get freed since it is on the stack
   }
 
   {

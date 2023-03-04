@@ -8,8 +8,11 @@
 #include "util/path.h"
 #include "util/unique_ptr.h"
 
+#include "scene/mesh.h"
+#include "scene/object.h"
 #include "scene/scene.h"
 
+#include <glm/glm.hpp>
 #include <pxr/base/plug/registry.h>
 #include <pxr/imaging/hd/dirtyList.h>
 #include <pxr/imaging/hd/renderDelegate.h>
@@ -18,7 +21,9 @@
 #include <pxr/imaging/hd/task.h>
 #include <pxr/usd/usd/stage.h>
 #include <pxr/usd/usdGeom/camera.h>
+#include <pxr/usd/usdGeom/mesh.h>
 #include <pxr/usd/usdGeom/metrics.h>
+#include <pxr/usd/usdGeom/xform.h>
 #include <pxr/usdImaging/usdImaging/delegate.h>
 
 HDCYCLES_NAMESPACE_OPEN_SCOPE
@@ -52,19 +57,139 @@ class DummyHdTask : public HdTask {
   TfTokenVector tags;
 };
 
-namespace {
-void convertFromUSD(ccl::Scene *scene, UsdStageRefPtr stage)
+void readMesh(ccl::Scene *scene, UsdGeomMesh const &usdMesh, glm::mat4 const &xform)
 {
-  for (UsdPrim const &prim : stage->Traverse()) {
-    std::cout << prim.GetPath().GetAsString() << std::endl;
-    if (prim.IsA<UsdGeomCamera>()) {
-      HdCyclesCamera camera(prim.GetPath());
-      std::cout << "Camera: " << prim.GetPath().GetAsString().c_str() << std::endl;
-      camera.ApplyCameraSettings(nullptr, scene->camera);
+  /* create mesh */
+  Mesh *mesh = new Mesh();
+  scene->geometry.push_back(mesh);
+
+  /* Create object. */
+  Object *object = new Object();
+  object->set_geometry(mesh);
+  Transform tfm;
+  const auto transpose = glm::transpose(xform);
+  memcpy(&tfm, &transpose[0][0], sizeof(tfm));
+  object->set_tfm(tfm);
+  scene->objects.push_back(object);
+
+  // array<Node *> used_shaders = mesh->get_used_shaders();
+  // used_shaders.push_back_slow(state.shader);
+  // mesh->set_used_shaders(used_shaders);
+
+  /* read state */
+  int shader = 0;
+  bool smooth = true;
+
+  /* read vertices and polygons */
+  pxr::VtArray<pxr::GfVec3f> P;
+  pxr::VtArray<int> verts;
+  pxr::VtArray<int> nverts;
+  // vector<float> UV;
+  // vector<int> verts, nverts;
+  usdMesh.GetPointsAttr().Get(&P);
+  usdMesh.GetFaceVertexIndicesAttr().Get(&verts);
+  usdMesh.GetFaceVertexCountsAttr().Get(&nverts);
+
+  array<float3> P_array{P.size()};
+  for (size_t i = 0; i < P.size(); i++) {
+    P_array[i].x = P[i].GetArray()[0];
+    P_array[i].y = P[i].GetArray()[1];
+    P_array[i].z = P[i].GetArray()[2];
+  }
+
+  /* create vertices */
+  mesh->set_verts(P_array);
+
+  size_t num_triangles = 0;
+  for (size_t i = 0; i < nverts.size(); i++)
+    num_triangles += nverts[i] - 2;
+  mesh->reserve_mesh(mesh->get_verts().size(), num_triangles);
+
+  /* create triangles */
+  int index_offset = 0;
+
+  for (size_t i = 0; i < nverts.size(); i++) {
+    for (int j = 0; j < nverts[i] - 2; j++) {
+      int v0 = verts[index_offset];
+      int v1 = verts[index_offset + j + 1];
+      int v2 = verts[index_offset + j + 2];
+
+      assert(v0 < (int)P.size());
+      assert(v1 < (int)P.size());
+      assert(v2 < (int)P.size());
+
+      mesh->add_triangle(v0, v1, v2, shader, smooth);
+    }
+
+    index_offset += nverts[i];
+  }
+
+  // if (xml_read_float_array(UV, node, "UV")) {
+  //   ustring name = ustring("UVMap");
+  //   Attribute *attr = mesh->attributes.add(ATTR_STD_UV, name);
+  //   float2 *fdata = attr->data_float2();
+
+  //   /* loop over the triangles */
+  //   index_offset = 0;
+  //   for (size_t i = 0; i < nverts.size(); i++) {
+  //     for (int j = 0; j < nverts[i] - 2; j++) {
+  //       int v0 = index_offset;
+  //       int v1 = index_offset + j + 1;
+  //       int v2 = index_offset + j + 2;
+
+  //       assert(v0 * 2 + 1 < (int)UV.size());
+  //       assert(v1 * 2 + 1 < (int)UV.size());
+  //       assert(v2 * 2 + 1 < (int)UV.size());
+
+  //       fdata[0] = make_float2(UV[v0 * 2], UV[v0 * 2 + 1]);
+  //       fdata[1] = make_float2(UV[v1 * 2], UV[v1 * 2 + 1]);
+  //       fdata[2] = make_float2(UV[v2 * 2], UV[v2 * 2 + 1]);
+  //       fdata += 3;
+  //     }
+
+  //     index_offset += nverts[i];
+  //   }
+  // }
+}
+
+void updateXform(glm::mat4 &xform, UsdGeomXform const &xformPrim)
+{
+  pxr::GfMatrix4d pxrXform;
+  bool resetXformStack = false;
+  xformPrim.GetLocalTransformation(&pxrXform, &resetXformStack);
+  glm::mat4 M;
+  for (int i = 0; i < 4; i++) {
+    for (int j = 0; j < 4; j++) {
+      M[i][j] = pxrXform.data()[4 * i + j];
     }
   }
+  xform *= M;
 }
-}  // namespace
+
+void traverseUsd(ccl::Scene *scene, UsdPrim const &prim, glm::mat4 xform)
+{
+  std::cout << prim.GetPath().GetAsString() << ": " << prim.GetTypeName().GetString() << std::endl;
+  if (prim.IsA<UsdGeomCamera>()) {
+    HdCyclesCamera camera(prim.GetPath());
+    std::cout << "Camera: " << prim.GetPath().GetAsString().c_str() << std::endl;
+    camera.ApplyCameraSettings(nullptr, scene->camera);
+  }
+  else if (UsdGeomMesh mesh = UsdGeomMesh(prim)) {
+    readMesh(scene, mesh, xform);
+  }
+  else if (UsdGeomXform xformPrim = UsdGeomXform(prim)) {
+    updateXform(xform, xformPrim);
+  }
+
+  for (const auto &child : prim.GetChildren()) {
+    traverseUsd(scene, child, xform);
+  }
+}
+
+void convertFromUSD(ccl::Scene *scene, UsdStageRefPtr stage)
+{
+  traverseUsd(scene, stage->GetPseudoRoot(), glm::mat4(1.0f));
+}
 
 void HdCyclesFileReader::read(Session *session, const char *filepath, const bool use_camera)
 {

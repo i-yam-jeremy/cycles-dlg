@@ -13,11 +13,14 @@ set(INC_SYS
   ${Epoxy_INCLUDE_DIRS}
 )
 
+find_package(glm CONFIG REQUIRED)
+
 set(LIB
   cycles_scene
   cycles_session
   cycles_graph
   ${Epoxy_LIBRARIES}
+  glm::glm
 )
 cycles_external_libraries_append(LIB)
 

@@ -75,11 +75,14 @@ OptixAabb calculateMeshAabb(const Mesh &mesh)
 }
 }  // namespace
 
+static std::mutex mutex;
+
 // Scene Building API
 // void reserveSpaceForNewInstances(size_t instanceCount);
 MeshHandle GeometryDemandLoaderImpl::addMesh(const Mesh &mesh,
                                              const std::optional<OptixAabb> &aabb)
 {
+  std::lock_guard guard(mutex);
   size_t meshIndex = m_meshes.size();
   size_t memoryUsage = 0;
   for (const auto &buildInput : mesh.buildInputs) {
@@ -97,6 +100,7 @@ MeshHandle GeometryDemandLoaderImpl::addMesh(const Mesh &mesh,
 
 void GeometryDemandLoaderImpl::addInstance(MeshHandle meshHandle, const AffineXform &xform)
 {
+  std::lock_guard guard(mutex);
   m_instancePartitioner->add(meshHandle.meshIndex, xform);
 }
 

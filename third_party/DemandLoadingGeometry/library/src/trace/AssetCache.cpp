@@ -37,6 +37,19 @@ void AssetCache::startThread()
       if (getAssetIndex(request.assetId) >= getAssets()->size()) {
         continue;
       }
+
+      const auto loadedAssetHandle = getAssetNoBuildNoUseCount(request.assetId, stream);
+      if (loadedAssetHandle.has_error()) {
+        std::cerr << "Error in AssetCache thread: " << loadedAssetHandle.error()->getMessage()
+                  << std::endl;
+        std::cerr << "Exiting.\n";
+        std::exit(1);
+      }
+
+      if (loadedAssetHandle.value() != nullptr) {
+        continue;  // Request asset is already loaded, no need to update top level AS
+      }
+
       const auto res = getAsset(
           request.assetId, request.minRayDifferential, request.assetPriorities, stream);
       if (res.has_error()) {
@@ -46,6 +59,7 @@ void AssetCache::startThread()
       }
       CUDA_CHECK(cudaStreamSynchronize(stream));
       updateTopLevelAS(stream);
+      CUDA_CHECK(cudaStreamSynchronize(stream));
     }
 
     CUDA_CHECK(cudaStreamDestroy(stream));
@@ -184,6 +198,7 @@ result<std::shared_ptr<glow::pipeline::render::IAsset>, Err> AssetCache::getAsse
 
     const auto asset = (*assets)[getAssetIndex(assetId)];
     if (asset->isResident()) {
+      std::cout << "Asset already resident\n" << std::endl;
       useCounts[getAssetIndex(assetId)]++;
       return asset;
     }
