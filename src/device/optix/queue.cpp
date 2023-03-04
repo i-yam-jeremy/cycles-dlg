@@ -120,9 +120,10 @@ bool OptiXDeviceQueue::enqueue(DeviceKernel kernel,
   sbt_params.callablesRecordCount = NUM_CALLABLE_PROGRAM_GROUPS;
   sbt_params.callablesRecordStrideInBytes = sizeof(SbtRecord);
 
-
-  auto optixDevice = dynamic_cast<OptiXDevice*>(cuda_device_);
+  auto optixDevice = dynamic_cast<OptiXDevice *>(cuda_device_);
   optixDevice->m_geoDemandLoader->preLaunch(nullptr, cuda_stream_);
+
+  std::cout << "OptixLaunch: " << work_size << std::endl;
 
   /* Launch the ray generation program. */
   optix_device_assert(optix_device,

@@ -38,16 +38,8 @@ void AssetCache::startThread()
         continue;
       }
 
-      const auto loadedAssetHandle = getAssetNoBuildNoUseCount(request.assetId, stream);
-      if (loadedAssetHandle.has_error()) {
-        std::cerr << "Error in AssetCache thread: " << loadedAssetHandle.error()->getMessage()
-                  << std::endl;
-        std::cerr << "Exiting.\n";
-        std::exit(1);
-      }
-
-      if (loadedAssetHandle.value() != nullptr) {
-        continue;  // Request asset is already loaded, no need to update top level AS
+      if (isResident(request.assetId)) {
+        continue;  // Requested asset is already loaded, no need to update top level AS
       }
 
       const auto res = getAsset(

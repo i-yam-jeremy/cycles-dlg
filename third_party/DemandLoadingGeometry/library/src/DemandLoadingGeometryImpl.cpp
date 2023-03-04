@@ -28,7 +28,7 @@ GeometryDemandLoaderImpl::GeometryDemandLoaderImpl(
 
 GeometryDemandLoaderImpl::~GeometryDemandLoaderImpl()
 {
-  // m_assetCache->stopThread();
+  m_assetCache->stopThread();
 
   // // Write chunk metrics
   // std::ofstream outChunkMetrics("chunkMetrics.csv", std::ofstream::out);
