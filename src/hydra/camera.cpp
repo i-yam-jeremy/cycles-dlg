@@ -261,7 +261,10 @@ void HdCyclesCamera::ApplyCameraSettings(HdRenderParam *renderParam, Camera *cam
 {
   ApplyCameraSettings(renderParam, _data, _windowPolicy, cam);
 
-  const float metersPerUnit = static_cast<HdCyclesSession *>(renderParam)->GetStageMetersPerUnit();
+  const float metersPerUnit =
+      (renderParam == nullptr) ?
+          0.01f :
+          static_cast<HdCyclesSession *>(renderParam)->GetStageMetersPerUnit();
 
   array<Transform> motion(_transformSamples.count);
   for (size_t i = 0; i < _transformSamples.count; ++i) {

@@ -177,10 +177,13 @@ void updateXform(glm::mat4 &xform, UsdGeomXform const &xformPrim)
   xform *= M;
 }
 
+const std::string cameraName = "/island/cam/shotCam";
+
 void traverseUsd(ccl::Scene *scene, UsdPrim const &prim, glm::mat4 xform, Node *meshShader)
 {
-  std::cout << prim.GetPath().GetAsString() << ": " << prim.GetTypeName().GetString() << std::endl;
-  if (prim.IsA<UsdGeomCamera>()) {
+  // std::cout << prim.GetPath().GetAsString() << ": " << prim.GetTypeName().GetString() <<
+  // std::endl;
+  if (prim.IsA<UsdGeomCamera>() && prim.GetPath().GetAsString() == cameraName) {
     HdCyclesCamera camera(prim.GetPath());
     std::cout << "Camera: " << prim.GetPath().GetAsString().c_str() << std::endl;
     camera.ApplyCameraSettings(nullptr, scene->camera);
@@ -195,7 +198,7 @@ void traverseUsd(ccl::Scene *scene, UsdPrim const &prim, glm::mat4 xform, Node *
   }
   else if (prim.GetTypeName().size() > 0) {
     std::cerr << "Unsupported USD node type: " << prim.GetTypeName() << std::endl;
-    std::exit(1);
+    // std::exit(1);
   }
 
   for (const auto &child : prim.GetChildren()) {
@@ -246,9 +249,9 @@ void initBaseScene(Scene *scene)
 void convertFromUSD(ccl::Scene *scene, UsdStageRefPtr stage)
 {
   initBaseScene(scene);
-  glm::mat4 baseUsdTransform = glm::scale(
-      glm::rotate(glm::mat4(0.01f), static_cast<float>(M_PI / 2.f), glm::vec3(1, 0, 0)),
-      glm::vec3(1, 1, -1));
+  glm::mat4 baseUsdTransform = glm::mat4(1); /*glm::scale(
+       glm::rotate(glm::mat4(0.01f), static_cast<float>(M_PI / 2.f), glm::vec3(1, 0, 0)),
+       glm::vec3(1, 1, -1));*/
   traverseUsd(scene, stage->GetPseudoRoot(), baseUsdTransform, scene->default_surface);
 }
 
