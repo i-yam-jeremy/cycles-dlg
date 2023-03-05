@@ -126,12 +126,11 @@ void readMesh(ccl::Scene *scene,
   }
 
   /* create vertices */
-  mesh->set_verts(P_array);
-
   size_t num_triangles = 0;
   for (size_t i = 0; i < nverts.size(); i++)
     num_triangles += nverts[i] - 2;
   mesh->reserve_mesh(mesh->get_verts().size(), num_triangles);
+  mesh->set_verts(P_array);
 
   /* create triangles */
   int index_offset = 0;
@@ -289,11 +288,11 @@ void traverseUsd(ccl::Scene *scene,
   // std::endl;
   if (prim.IsA<UsdGeomCamera>()) {
     // if (prim.GetPath().GetAsString() == cameraName) {
-    //  HdCyclesCamera camera(prim.GetPath());
-    //  std::cout << "Camera: " << prim.GetPath().GetAsString().c_str() << std::endl;
-    //  camera.ApplyCameraSettings(nullptr, scene->camera);
-    //  scene->camera->need_flags_update = true;
-    //  scene->camera->update(scene);
+    //   HdCyclesCamera camera(prim.GetPath());
+    //   std::cout << "Camera: " << prim.GetPath().GetAsString().c_str() << std::endl;
+    //   camera.ApplyCameraSettings(nullptr, scene->camera);
+    //   scene->camera->need_flags_update = true;
+    //   scene->camera->update(scene);
     // }
   }
   else if (UsdGeomMesh mesh = UsdGeomMesh(prim)) {
@@ -323,7 +322,7 @@ void initBaseScene(Scene *scene)
     <!-- Camera -->
     <camera width="800" height="500" />
 
-    <transform translate="15 2 -80" scale="1 1 1">
+    <transform translate="15 2 -20" scale="1 1 1">
       <camera type="perspective" />
     </transform>
 
