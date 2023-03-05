@@ -31,6 +31,8 @@
 #include <pxr/usd/usdGeom/camera.h>
 #include <pxr/usd/usdGeom/mesh.h>
 #include <pxr/usd/usdGeom/metrics.h>
+#include <pxr/usd/usdGeom/pointInstancer.h>
+#include <pxr/usd/usdGeom/scope.h>
 #include <pxr/usd/usdGeom/xform.h>
 #include <pxr/usdImaging/usdImaging/delegate.h>
 
@@ -68,20 +70,35 @@ class DummyHdTask : public HdTask {
 void readMesh(ccl::Scene *scene,
               UsdGeomMesh const &usdMesh,
               glm::mat4 const &xform,
-              Node *meshShader)
+              Node *meshShader,
+              std::unordered_map<std::string, Mesh *> &meshes)
 {
   /* create mesh */
+
+  auto const meshName = usdMesh.GetPrim().GetName().GetString();
+
+  auto const addInstanceToScene = [&xform, &scene](Mesh *mesh) {
+    Object *object = new Object();
+    object->set_geometry(mesh);
+    Transform tfm;
+    const auto transpose = glm::transpose(xform);
+    memcpy(&tfm, &transpose[0][0], sizeof(tfm));
+    object->set_tfm(tfm);
+    scene->objects.push_back(object);
+  };
+
+  if (meshes.find(meshName) != meshes.end()) {
+    // Mesh alread exists, this is an instance
+    addInstanceToScene(meshes.find(meshName)->second);
+    return;
+  }
+
   Mesh *mesh = new Mesh();
   scene->geometry.push_back(mesh);
+  meshes.insert({meshName, mesh});
 
   /* Create object. */
-  Object *object = new Object();
-  object->set_geometry(mesh);
-  Transform tfm;
-  const auto transpose = glm::transpose(xform);
-  memcpy(&tfm, &transpose[0][0], sizeof(tfm));
-  object->set_tfm(tfm);
-  scene->objects.push_back(object);
+  addInstanceToScene(mesh);
 
   array<Node *> used_shaders = mesh->get_used_shaders();
   used_shaders.push_back_slow(meshShader);
@@ -89,7 +106,7 @@ void readMesh(ccl::Scene *scene,
 
   /* read state */
   int shader = 0;
-  bool smooth = true;
+  bool smooth = false;
 
   /* read vertices and polygons */
   pxr::VtArray<pxr::GfVec3f> P;
@@ -125,9 +142,12 @@ void readMesh(ccl::Scene *scene,
       int v1 = verts[index_offset + j + 1];
       int v2 = verts[index_offset + j + 2];
 
-      assert(v0 < (int)P.size());
-      assert(v1 < (int)P.size());
-      assert(v2 < (int)P.size());
+      // assert(v0 < (int)P.size());
+      // assert(v1 < (int)P.size());
+      // assert(v2 < (int)P.size());
+      if (v0 >= P.size() || v1 >= P.size() || v2 >= P.size()) {
+        continue;
+      }
 
       mesh->add_triangle(v0, v1, v2, shader, smooth);
     }
@@ -177,32 +197,122 @@ void updateXform(glm::mat4 &xform, UsdGeomXform const &xformPrim)
   xform *= M;
 }
 
+void processPointInstancer(Scene *scene,
+                           UsdStage const &stage,
+                           UsdGeomPointInstancer const &instancer,
+                           std::unordered_map<std::string, Mesh *> const &meshes)
+{
+  pxr::VtArray<pxr::GfVec3f> positions;
+  pxr::SdfPathVector protoTypes;
+  std::vector<Mesh *> protoMeshes;
+  pxr::VtArray<int> protoIndices;
+  instancer.GetPositionsAttr().Get(&positions);
+  instancer.GetPrototypesRel().GetTargets(&protoTypes);
+  instancer.GetProtoIndicesAttr().Get(&protoIndices);
+
+  for (auto const &path : protoTypes) {
+    auto const &protoPrim = stage.GetPrimAtPath(path);
+    if (!protoPrim.IsValid()) {
+      std::cerr << "Unabled to find prim at USD path: " << path.GetAsString() << std::endl;
+      return;
+    }
+    // std::cout << "PointInstancer prototype: " << path.GetString() << " --> "
+    //           << protoPrim.GetPrototype().GetPath().GetString() << std::endl;
+    auto const entry = meshes.find(protoPrim.GetPrototype().GetName());
+    if (entry == meshes.end()) {
+      std::cerr << "Unabled to find Cycles mesh for USD prim at path: " << path.GetAsString()
+                << std::endl;
+      return;
+    }
+    protoMeshes.push_back(entry->second);
+  }
+
+  if (positions.size() != protoIndices.size()) {
+    std::cerr << "Attributes have differing sizes" << std::endl;
+    std::exit(1);
+  }
+  for (size_t i = 0; i < positions.size(); i++) {
+    // TODO(jberchtold) use orientation attribute
+    auto const &p = positions[i];
+    auto *mesh = protoMeshes[protoIndices[i]];
+
+    auto const xform = glm::translate(glm::mat4(1), glm::vec3(p[0], p[1], p[2]));
+
+    Object *object = new Object();
+    object->set_geometry(mesh);
+    Transform tfm;
+    const auto transpose = glm::transpose(xform);
+    memcpy(&tfm, &transpose[0][0], sizeof(tfm));
+    object->set_tfm(tfm);
+    scene->objects.push_back(object);
+  }
+}
+
+void processPointInstancers(Scene *scene,
+                            UsdStage const &stage,
+                            std::vector<UsdGeomPointInstancer> const &pointInstancers,
+                            std::unordered_map<std::string, Mesh *> const &meshes)
+{
+  // TODO(jberchtold) need to store xform when saving point instancers so they keep their original
+  // transform
+  for (auto &pointInstancer : pointInstancers) {
+    processPointInstancer(scene, stage, pointInstancer, meshes);
+  }
+}
+
 const std::string cameraName = "/island/cam/shotCam";
 
-void traverseUsd(ccl::Scene *scene, UsdPrim const &prim, glm::mat4 xform, Node *meshShader)
+void printRecursive(UsdPrim const &prim)
 {
+  std::cout << prim.GetPath() << ": " << prim.GetTypeName() << std::endl;
+  for (auto const &prim : prim.GetChildren()) {
+    printRecursive(prim);
+  }
+}
+
+static std::unordered_set<std::string> typesFound;
+
+void traverseUsd(ccl::Scene *scene,
+                 UsdStage const &stage,
+                 UsdPrim const &prim,
+                 glm::mat4 xform,
+                 Node *meshShader,
+                 std::unordered_map<std::string, Mesh *> &meshes,
+                 std::vector<UsdGeomPointInstancer> &pointInstancers)
+{
+  // if (prim.IsInstance()) {
+  //   std::cout << "IsInstance: " << prim.GetPath().GetString() << std::endl;
+  //   printRecursive(prim.GetPrototype());
+  //   return;
+  // }
   // std::cout << prim.GetPath().GetAsString() << ": " << prim.GetTypeName().GetString() <<
   // std::endl;
-  if (prim.IsA<UsdGeomCamera>() && prim.GetPath().GetAsString() == cameraName) {
-    HdCyclesCamera camera(prim.GetPath());
-    std::cout << "Camera: " << prim.GetPath().GetAsString().c_str() << std::endl;
-    camera.ApplyCameraSettings(nullptr, scene->camera);
-    scene->camera->need_flags_update = true;
-    scene->camera->update(scene);
+  if (prim.IsA<UsdGeomCamera>()) {
+    // if (prim.GetPath().GetAsString() == cameraName) {
+    //  HdCyclesCamera camera(prim.GetPath());
+    //  std::cout << "Camera: " << prim.GetPath().GetAsString().c_str() << std::endl;
+    //  camera.ApplyCameraSettings(nullptr, scene->camera);
+    //  scene->camera->need_flags_update = true;
+    //  scene->camera->update(scene);
+    // }
   }
   else if (UsdGeomMesh mesh = UsdGeomMesh(prim)) {
-    readMesh(scene, mesh, xform, meshShader);
+    readMesh(scene, mesh, xform, meshShader, meshes);
   }
   else if (UsdGeomXform xformPrim = UsdGeomXform(prim)) {
     updateXform(xform, xformPrim);
   }
+  else if (UsdGeomPointInstancer instancerPrim = UsdGeomPointInstancer(prim)) {
+    pointInstancers.push_back(instancerPrim);
+  }
   else if (prim.GetTypeName().size() > 0) {
-    std::cerr << "Unsupported USD node type: " << prim.GetTypeName() << std::endl;
+    // std::cerr << "Unsupported USD node type: " << prim.GetTypeName() << std::endl;
     // std::exit(1);
+    typesFound.insert(prim.GetTypeName().GetString());
   }
 
-  for (const auto &child : prim.GetChildren()) {
-    traverseUsd(scene, child, xform, meshShader);
+  for (const auto &child : prim.GetFilteredChildren(UsdTraverseInstanceProxies())) {
+    traverseUsd(scene, stage, child, xform, meshShader, meshes, pointInstancers);
   }
 }
 
@@ -213,7 +323,7 @@ void initBaseScene(Scene *scene)
     <!-- Camera -->
     <camera width="800" height="500" />
 
-    <transform translate="1.5 2 -8" scale="1 1 1">
+    <transform translate="15 2 -80" scale="1 1 1">
       <camera type="perspective" />
     </transform>
 
@@ -249,10 +359,28 @@ void initBaseScene(Scene *scene)
 void convertFromUSD(ccl::Scene *scene, UsdStageRefPtr stage)
 {
   initBaseScene(scene);
-  glm::mat4 baseUsdTransform = glm::mat4(1); /*glm::scale(
-       glm::rotate(glm::mat4(0.01f), static_cast<float>(M_PI / 2.f), glm::vec3(1, 0, 0)),
-       glm::vec3(1, 1, -1));*/
-  traverseUsd(scene, stage->GetPseudoRoot(), baseUsdTransform, scene->default_surface);
+  glm::mat4 baseUsdTransform = glm::scale(
+      glm::mat4(0.001f),  //  glm::rotate(glm::mat4(0.01f), static_cast<float>(M_PI / 2.f),
+                          //  glm::vec3(1, 0, 0)),
+      glm::vec3(1, 1, -1));
+  std::unordered_map<std::string, Mesh *> meshes;
+  std::vector<UsdGeomPointInstancer> pointInstancers;
+  auto const processPrim = [&](UsdPrim const &prim) {
+    traverseUsd(
+        scene, *stage, prim, baseUsdTransform, scene->default_surface, meshes, pointInstancers);
+  };
+  processPrim(stage->GetPseudoRoot());
+  for (auto const &protoPrim : stage->GetPrototypes()) {
+    std::cout << "Proto prim: " << protoPrim.GetPath() << std::endl;
+    processPrim(protoPrim);
+  }
+
+  processPointInstancers(scene, *stage, pointInstancers, meshes);
+
+  for (auto const &s : typesFound) {
+    std::cerr << "Unsupported USD Type: " << s << std::endl;
+  }
+  std::cout << "Meshes: " << meshes.size() << std::endl;
 }
 
 void HdCyclesFileReader::read(Session *session, const char *filepath, const bool use_camera)
