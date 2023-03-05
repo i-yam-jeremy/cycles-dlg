@@ -1,2 +1,5 @@
 catch throw
-r --samples 100 --device OPTIX --output image.png examples/scene_monkey.xml
+set breakpoint pending on
+# b pxr/imaging/hd/renderIndex.cpp:125
+#b pxr/usdImaging/usdImaging/delegate.cpp:122
+r --samples 10 --device OPTIX --output image.png "/media/jeremy/DRIVE/home/jeremy/Documents/Kitchen_set/Kitchen_set.usd" --width 4096 --height 2048

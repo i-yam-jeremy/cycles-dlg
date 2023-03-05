@@ -62,6 +62,7 @@ enum { PIP_SHADE_RAYTRACE, PIP_SHADE_MNEE, PIP_INTERSECT, NUM_PIPELINES };
 struct Empty {};
 using SbtRecord = demandLoadingGeometry::SBTRecord<Empty>;
 
+constexpr bool useDLG = false;
 class OptiXDevice : public CUDADevice {
  public:
   std::shared_ptr<demandLoadingGeometry::GeometryDemandLoader> m_geoDemandLoader = nullptr;
@@ -180,6 +181,12 @@ class OptiXDevice : public CUDADevice {
 
   /* Run configured denoiser. */
   bool denoise_run(DenoiseContext &context, const DenoisePass &pass);
+
+  void addDLGMesh(Mesh *mesh);
+  void buildVanillaCyclesMesh(BVHOptiX *const bvh_optix,
+                              Progress &progress,
+                              OptixBuildOperation operation,
+                              Mesh *mesh);
 };
 
 CCL_NAMESPACE_END

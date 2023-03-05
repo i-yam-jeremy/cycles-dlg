@@ -76,7 +76,6 @@ void readMesh(ccl::Scene *scene,
   /* create mesh */
 
   auto const meshName = usdMesh.GetPrim().GetName().GetString();
-
   auto const addInstanceToScene = [&xform, &scene](Mesh *mesh) {
     Object *object = new Object();
     object->set_geometry(mesh);
@@ -93,6 +92,32 @@ void readMesh(ccl::Scene *scene,
     return;
   }
 
+  auto displayColorAttr = usdMesh.GetDisplayColorAttr();
+  pxr::GfVec3f displayColor(0.8, 0.8, 0.8);
+  if (displayColorAttr) {
+    pxr::VtVec3fArray displayColors;
+    // std::cout << displayColorAttr.GetTypeName() << std::endl;
+    if (displayColorAttr.Get(&displayColors) && displayColors.size() > 0) {
+      displayColor = displayColors[0];
+      // std::cout << "Display color: " << displayColor[0] << ", " << displayColor[1] << ", "
+      //           << displayColor[2] << std::endl;
+      // std::exit(1);
+    }
+  }
+
+  xmlReadFromString(scene,
+                    R"(<cycles>
+    <shader name="shader)" +
+                        std::to_string(scene->shaders.size()) + R"(">
+      <glossy_bsdf name="floor_closure" distribution="beckmann" roughness="0.8" color=")" +
+                        std::to_string(displayColor[0]) + " " + std::to_string(displayColor[1]) +
+                        " " + std::to_string(displayColor[2]) + R"("/>
+      <connect from="floor_closure bsdf" to="output surface" />
+    </shader>
+   </cycles>
+  )");
+  meshShader = scene->shaders.back();
+
   Mesh *mesh = new Mesh();
   scene->geometry.push_back(mesh);
   meshes.insert({meshName, mesh});
@@ -106,7 +131,7 @@ void readMesh(ccl::Scene *scene,
 
   /* read state */
   int shader = 0;
-  bool smooth = false;
+  bool smooth = true;
 
   /* read vertices and polygons */
   pxr::VtArray<pxr::GfVec3f> P;
@@ -186,7 +211,12 @@ void updateXform(glm::mat4 &xform, UsdGeomXform const &xformPrim)
 {
   pxr::GfMatrix4d pxrXform;
   bool resetXformStack = false;
-  xformPrim.GetLocalTransformation(&pxrXform, &resetXformStack);
+  bool success = xformPrim.GetLocalTransformation(&pxrXform, &resetXformStack);
+  if (!success) {
+    std::cerr << "Error with GetLocalTransformation: " << xformPrim.GetPath().GetString()
+              << std::endl;
+    std::exit(1);
+  }
   glm::mat4 M;
   for (int i = 0; i < 4; i++) {
     for (int j = 0; j < 4; j++) {
@@ -231,7 +261,7 @@ void processPointInstancer(Scene *scene,
     std::exit(1);
   }
   for (size_t i = 0; i < positions.size(); i++) {
-    // TODO(jberchtold) use orientation attribute
+    // TODO(jberchtold) use orientation and scale attribute
     auto const &p = positions[i];
     auto *mesh = protoMeshes[protoIndices[i]];
 
@@ -279,6 +309,26 @@ void traverseUsd(ccl::Scene *scene,
                  std::unordered_map<std::string, Mesh *> &meshes,
                  std::vector<UsdGeomPointInstancer> &pointInstancers)
 {
+  if (UsdGeomImageable imageable = UsdGeomImageable(prim)) {
+    auto visAttr = imageable.GetVisibilityAttr();
+    if (visAttr) {
+      pxr::TfToken visibility;
+      visAttr.Get(&visibility);
+      if (visibility == pxr::UsdGeomTokens->invisible) {
+        return;  // Don't process invisible prims
+      }
+    }
+
+    pxr::UsdAttribute purpose_attr = imageable.GetPurposeAttr();
+    if (purpose_attr) {
+      pxr::TfToken purpose;
+      purpose_attr.Get(&purpose);
+      if (purpose != pxr::UsdGeomTokens->render && purpose != pxr::UsdGeomTokens->default_) {
+        return;  // Don't process prims that aren't for rendering
+      }
+    }
+  }
+
   // if (prim.IsInstance()) {
   //   std::cout << "IsInstance: " << prim.GetPath().GetString() << std::endl;
   //   printRecursive(prim.GetPrototype());
@@ -317,62 +367,33 @@ void traverseUsd(ccl::Scene *scene,
 
 void initBaseScene(Scene *scene)
 {
-  const auto sceneXml = R"(
-    <cycles>
-    <!-- Camera -->
-    <camera width="800" height="500" />
-
-    <transform translate="15 2 -20" scale="1 1 1">
-      <camera type="perspective" />
-    </transform>
-
-    <!-- Background Shader -->
-    <background>
-      <sky_texture name="tex" sky_type="hosek_wilkie" />
-      <background name="bg" strength="20.0" />
-      
-      <connect from="tex color" to="bg color" />
-      <connect from="bg background" to="output surface" />
-    </background>
-
-    <!-- Monkey Shader -->
-    <shader name="monkey">
-      <noise_texture name="tex" scale="2.0"/>
-      <glass_bsdf name="monkey_closure" distribution="beckmann" IOR="1.4" roughness="0.5" />
-      <connect from="tex color" to="monkey_closure color" />
-      <connect from="monkey_closure bsdf" to="output surface" />
-    </shader>
-
-    <!-- Floor Shader -->
-    <shader name="floor">
-      <checker_texture name="checker" color1="0.8, 0.8, 0.8" color2="1.0, 0.1, 0.1" />
-      <glossy_bsdf name="floor_closure" distribution="beckmann" roughness="0.2"/>
-      <connect from="checker color" to="floor_closure color" />
-      <connect from="floor_closure bsdf" to="output surface" />
-    </shader>
-    </cycles>
-  )";
-  xmlReadFromString(scene, sceneXml);
+  xml_read_file(scene, "base_scene.xml");
 }
 
 void convertFromUSD(ccl::Scene *scene, UsdStageRefPtr stage)
 {
   initBaseScene(scene);
-  glm::mat4 baseUsdTransform = glm::scale(
-      glm::mat4(0.001f),  //  glm::rotate(glm::mat4(0.01f), static_cast<float>(M_PI / 2.f),
-                          //  glm::vec3(1, 0, 0)),
+  bool isMoana = true;
+  const glm::mat4 moanaTransform = glm::scale(glm::mat4(0.001f), glm::vec3(1, 1, -1));
+  const glm::mat4 otherTransform = glm::scale(
+      glm::rotate(glm::mat4(0.01f), static_cast<float>(M_PI / 2.f), glm::vec3(1, 0, 0)),
       glm::vec3(1, 1, -1));
+  glm::mat4 baseUsdTransform = isMoana ? moanaTransform : otherTransform;
   std::unordered_map<std::string, Mesh *> meshes;
   std::vector<UsdGeomPointInstancer> pointInstancers;
+
+  Shader *meshShader = scene->default_surface;
+  for (auto const shader : scene->shaders) {
+    std::cout << "Shader: " << shader->name.c_str() << std::endl;
+    if (shader->name == "floor") {
+      meshShader = shader;
+    }
+  }
+
   auto const processPrim = [&](UsdPrim const &prim) {
-    traverseUsd(
-        scene, *stage, prim, baseUsdTransform, scene->default_surface, meshes, pointInstancers);
+    traverseUsd(scene, *stage, prim, baseUsdTransform, meshShader, meshes, pointInstancers);
   };
   processPrim(stage->GetPseudoRoot());
-  for (auto const &protoPrim : stage->GetPrototypes()) {
-    std::cout << "Proto prim: " << protoPrim.GetPath() << std::endl;
-    processPrim(protoPrim);
-  }
 
   processPointInstancers(scene, *stage, pointInstancers, meshes);
 
@@ -396,6 +417,7 @@ void HdCyclesFileReader::read(Session *session, const char *filepath, const bool
 
   convertFromUSD(session->scene, stage);
 
+  //   initBaseScene(session->scene);
   //   /* Init paths. */
   //   SdfPath root_path = SdfPath::AbsoluteRootPath();
   //   SdfPath task_path("/_hdCycles/DummyHdTask");
@@ -412,7 +434,6 @@ void HdCyclesFileReader::read(Session *session, const char *filepath, const bool
   //   std::cout << root_path << ", " << filepath << std::endl;
   //   unique_ptr<UsdImagingDelegate> scene_delegate = make_unique<UsdImagingDelegate>(
   //       render_index.get(), root_path);
-  //   std::exit(0);
 
   //   /* Add render tags and collection to render index. */
   //   HdRprimCollection collection(HdTokens->geometry, HdReprSelector(HdReprTokens->smoothHull));
@@ -454,6 +475,8 @@ void HdCyclesFileReader::read(Session *session, const char *filepath, const bool
   //       }
   //     }
   //   }
+
+  //   std::cout << "Objects: " << session->scene->objects.size() << std::endl;
 }
 
 HDCYCLES_NAMESPACE_CLOSE_SCOPE

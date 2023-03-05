@@ -121,7 +121,9 @@ bool OptiXDeviceQueue::enqueue(DeviceKernel kernel,
   sbt_params.callablesRecordStrideInBytes = sizeof(SbtRecord);
 
   auto optixDevice = dynamic_cast<OptiXDevice *>(cuda_device_);
-  optixDevice->m_geoDemandLoader->preLaunch(nullptr, cuda_stream_);
+  if (useDLG) {
+    optixDevice->m_geoDemandLoader->preLaunch(nullptr, cuda_stream_);
+  }
 
   std::cout << "OptixLaunch: " << work_size << std::endl;
 
@@ -136,7 +138,9 @@ bool OptiXDeviceQueue::enqueue(DeviceKernel kernel,
                                   1,
                                   1));
 
-  optixDevice->m_geoDemandLoader->postLaunch(cuda_stream_);
+  if (useDLG) {
+    optixDevice->m_geoDemandLoader->postLaunch(cuda_stream_);
+  }
 
   debug_enqueue_end();
 

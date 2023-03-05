@@ -1,0 +1,31 @@
+<cycles>
+    <!-- Camera -->
+    <camera width="800" height="500" />
+
+    <transform translate="-10 2 -5" scale="1 1 1" rotate="45 0 1 0">
+      <camera type="perspective" />
+    </transform>
+
+    <!-- Background Shader -->
+    <background>
+      <sky_texture name="tex" sky_type="hosek_wilkie" />
+      <background name="bg" strength="8.0" />
+      
+      <connect from="tex color" to="bg color" />
+      <connect from="bg background" to="output surface" />
+    </background>
+
+    <!-- Monkey Shader -->
+    <shader name="monkey">
+      <noise_texture name="tex" scale="2.0"/>
+      <glass_bsdf name="monkey_closure" distribution="beckmann" IOR="1.4" roughness="0.5" />
+      <connect from="tex color" to="monkey_closure color" />
+      <connect from="monkey_closure bsdf" to="output surface" />
+    </shader>
+
+    <!-- Floor Shader -->
+    <shader name="floor">
+      <glossy_bsdf name="floor_closure" distribution="beckmann" roughness="0.8" color="0.8 0.8 0.8"/>
+      <connect from="floor_closure bsdf" to="output surface" />
+    </shader>
+</cycles>
