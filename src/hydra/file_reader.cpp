@@ -67,6 +67,50 @@ class DummyHdTask : public HdTask {
   TfTokenVector tags;
 };
 
+Shader *createMeshShader(Scene *scene, UsdGeomMesh const &usdMesh)
+{
+  auto displayColorAttr = usdMesh.GetDisplayColorAttr();
+  pxr::GfVec3f displayColor(0.8, 0.8, 0.8);
+  if (displayColorAttr) {
+    pxr::VtVec3fArray displayColors;
+    // std::cout << displayColorAttr.GetTypeName() << std::endl;
+    if (displayColorAttr.Get(&displayColors) && displayColors.size() > 0) {
+      displayColor = displayColors[0];
+      // std::cout << "Display color: " << displayColor[0] << ", " << displayColor[1] << ", "
+      //           << displayColor[2] << std::endl;
+      // std::exit(1);
+    }
+  }
+
+  std::string xmlData = R"(<cycles>
+    <shader name="shader)" +
+                        std::to_string(scene->shaders.size()) + R"(">
+      <glossy_bsdf name="floor_closure" distribution="beckmann" roughness="0.8" color=")" +
+                        std::to_string(displayColor[0]) + " " + std::to_string(displayColor[1]) +
+                        " " + std::to_string(displayColor[2]) + R"("/>
+      <connect from="floor_closure bsdf" to="output surface" />
+    </shader>
+   </cycles>
+  )";
+
+  if (usdMesh.GetPath().GetString().find("ocean_geo") != std::string::npos) {
+    displayColor = pxr::GfVec3f(0.6, 0.6, 0.8);
+    xmlData = R"(<cycles>
+      <shader name="shader)" +
+              std::to_string(scene->shaders.size()) + R"(">
+        <glass_bsdf name="floor_closure" distribution="beckmann" IOR="1.33" roughness="0.1" color=")" +
+              std::to_string(displayColor[0]) + " " + std::to_string(displayColor[1]) + " " +
+              std::to_string(displayColor[2]) + R"("/>
+        <connect from="floor_closure bsdf" to="output surface" />
+      </shader>
+    </cycles>
+    )";
+  }
+
+  xmlReadFromString(scene, xmlData);
+  return scene->shaders.back();
+}
+
 void readMesh(ccl::Scene *scene,
               UsdGeomMesh const &usdMesh,
               glm::mat4 const &xform,
@@ -92,31 +136,7 @@ void readMesh(ccl::Scene *scene,
     return;
   }
 
-  auto displayColorAttr = usdMesh.GetDisplayColorAttr();
-  pxr::GfVec3f displayColor(0.8, 0.8, 0.8);
-  if (displayColorAttr) {
-    pxr::VtVec3fArray displayColors;
-    // std::cout << displayColorAttr.GetTypeName() << std::endl;
-    if (displayColorAttr.Get(&displayColors) && displayColors.size() > 0) {
-      displayColor = displayColors[0];
-      // std::cout << "Display color: " << displayColor[0] << ", " << displayColor[1] << ", "
-      //           << displayColor[2] << std::endl;
-      // std::exit(1);
-    }
-  }
-
-  xmlReadFromString(scene,
-                    R"(<cycles>
-    <shader name="shader)" +
-                        std::to_string(scene->shaders.size()) + R"(">
-      <glossy_bsdf name="floor_closure" distribution="beckmann" roughness="0.8" color=")" +
-                        std::to_string(displayColor[0]) + " " + std::to_string(displayColor[1]) +
-                        " " + std::to_string(displayColor[2]) + R"("/>
-      <connect from="floor_closure bsdf" to="output surface" />
-    </shader>
-   </cycles>
-  )");
-  meshShader = scene->shaders.back();
+  meshShader = createMeshShader(scene, usdMesh);
 
   Mesh *mesh = new Mesh();
   scene->geometry.push_back(mesh);
@@ -334,8 +354,7 @@ void traverseUsd(ccl::Scene *scene,
   //   printRecursive(prim.GetPrototype());
   //   return;
   // }
-  // std::cout << prim.GetPath().GetAsString() << ": " << prim.GetTypeName().GetString() <<
-  // std::endl;
+  std::cout << prim.GetPath().GetAsString() << ": " << prim.GetTypeName().GetString() << std::endl;
   if (prim.IsA<UsdGeomCamera>()) {
     // if (prim.GetPath().GetAsString() == cameraName) {
     //   HdCyclesCamera camera(prim.GetPath());
