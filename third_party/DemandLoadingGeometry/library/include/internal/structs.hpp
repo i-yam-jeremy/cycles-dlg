@@ -14,7 +14,7 @@ struct GeometryDeviceContext {
   OptixTraversableHandle sceneTraversableHandle;
   // Internal
   internal::RayCount *d_assetRayCountBuffer;
-  RayIndex **d_stalledRayIndices;
+  // RayIndex **d_stalledRayIndices;
 };
 
 } // namespace demandLoadingGeometry

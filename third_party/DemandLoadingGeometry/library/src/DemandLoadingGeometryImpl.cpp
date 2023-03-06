@@ -23,7 +23,7 @@ GeometryDemandLoaderImpl::GeometryDemandLoaderImpl(
 {
   m_deviceContext.sceneTraversableHandle = NULL_TRAVERSABLE_HANDLE;
   m_deviceContext.d_assetRayCountBuffer = nullptr;
-  m_deviceContext.d_stalledRayIndices = nullptr;
+  // m_deviceContext.d_stalledRayIndices = nullptr;
 }
 
 GeometryDemandLoaderImpl::~GeometryDemandLoaderImpl()
@@ -111,7 +111,7 @@ OptixTraversableHandle GeometryDemandLoaderImpl::updateScene(unsigned int baseDl
   for (const auto &d_rayQueue : m_stalledRayQueues) {
     CUDA_CHECK(cudaFree(d_rayQueue));
   }
-  CUDA_CHECK(cudaFree(m_deviceContext.d_stalledRayIndices));
+  // CUDA_CHECK(cudaFree(m_deviceContext.d_stalledRayIndices));
   m_stalledRayQueues.clear();
 
   partition();

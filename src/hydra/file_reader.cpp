@@ -360,9 +360,8 @@ void processPointInstancer(Scene *scene,
   }
 
   std::vector<std::pair<glm::mat4, UsdGeomPointInstancer>> _ignoredPointInstancers;
-  auto const instanceCount = positions.size(); //std::min(positions.size(), size_t(1000));
+  auto const instanceCount = std::min(positions.size(), size_t(1000000));
   for (size_t i = 0; i < instanceCount; i++) {
-    // TODO(jberchtold) use orientation and scale attribute
     auto const &p = positions[i];
     auto const &s = scales[i];
     auto const &orientation = orientations[i];
