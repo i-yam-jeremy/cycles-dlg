@@ -125,18 +125,18 @@ OptixTraversableHandle GeometryDemandLoaderImpl::updateScene(unsigned int baseDl
   m_assetRayCounts->write(assetRayCounts.data());  // Write zeroes to initialize ray counts
   m_deviceContext.d_assetRayCountBuffer = m_assetRayCounts->rawPtr();
 
-  for (size_t i = 0; i < m_assets.size(); i++) {
-    demandLoadingGeometry::RayIndex *d_rayQueue;
-    CUDA_CHECK(cudaMallocManaged(
-        &d_rayQueue, m_options.maxActiveRayCount * sizeof(demandLoadingGeometry::RayIndex)));
-    m_stalledRayQueues.push_back(d_rayQueue);
-  }
-  CUDA_CHECK(cudaMalloc(&m_deviceContext.d_stalledRayIndices,
-                        m_stalledRayQueues.size() * sizeof(m_stalledRayQueues[0])));
-  CUDA_CHECK(cudaMemcpy(m_deviceContext.d_stalledRayIndices,
-                        m_stalledRayQueues.data(),
-                        m_stalledRayQueues.size() * sizeof(m_stalledRayQueues[0]),
-                        cudaMemcpyHostToDevice));
+  // for (size_t i = 0; i < m_assets.size(); i++) {
+  //   demandLoadingGeometry::RayIndex *d_rayQueue;
+  //   CUDA_CHECK(cudaMallocManaged(
+  //       &d_rayQueue, m_options.maxActiveRayCount * sizeof(demandLoadingGeometry::RayIndex)));
+  //   m_stalledRayQueues.push_back(d_rayQueue);
+  // }
+  // CUDA_CHECK(cudaMalloc(&m_deviceContext.d_stalledRayIndices,
+  //                       m_stalledRayQueues.size() * sizeof(m_stalledRayQueues[0])));
+  // CUDA_CHECK(cudaMemcpy(m_deviceContext.d_stalledRayIndices,
+  //                       m_stalledRayQueues.data(),
+  //                       m_stalledRayQueues.size() * sizeof(m_stalledRayQueues[0]),
+  //                       cudaMemcpyHostToDevice));
 
   CUDA_CHECK(cudaStreamSynchronize((cudaStream_t)0));
 
