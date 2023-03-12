@@ -335,8 +335,18 @@ glow::optix::OptixManager::createChunkAS(
         sizeof(instanceList.instanceXforms[0]) * instanceList.instanceXforms.size(), stream);
     xforms.write(instanceList.instanceXforms.data());
 
+    glow::memory::DevicePtr<uint32_t> instanceIds(
+        sizeof(instanceList.instanceIds[0]) * instanceList.instanceIds.size(), stream);
+    instanceIds.write(instanceList.instanceIds.data());
+
+    if (instanceList.instanceIds.size() != instanceList.instanceXforms.size()) {
+      std::cerr << "Invalid chunk, number of instance IDs and instance xforms doesn't match\n";
+      std::exit(1);
+    }
+
     populateOptixInstances(deviceInstances.rawPtr() + instanceOffset,
                            xforms.rawPtr(),
+                           instanceIds.rawPtr(),
                            asset->getAS(),
                            asset->getSBTOffset(),
                            instanceList.instanceXforms.size(),

@@ -83,7 +83,7 @@ void InstancePartitioner::setMeshInfo(int meshId, const OptixAabb &aabb, const s
   m_meshMemoryUsages[meshId] = memoryUsage;
 }
 
-void InstancePartitioner::add(int meshId, const demandLoadingGeometry::AffineXform &instanceXform)
+void InstancePartitioner::add(int meshId, const demandLoadingGeometry::AffineXform &instanceXform, uint32_t instanceId)
 {
   const auto memoryUsage = m_meshMemoryUsages.find(meshId);
   if (memoryUsage == m_meshMemoryUsages.end()) {
@@ -101,12 +101,12 @@ void InstancePartitioner::add(int meshId, const demandLoadingGeometry::AffineXfo
   if (memoryUsage->second >= meshMemoryUsageThreshold) {
     auto meshChunk = std::make_shared<glow::pipeline::render::Chunk>(scaleAABB(aabb->second, 1.),
                                                                      instanceXform.toMat());
-    meshChunk->addInstance(meshId, instanceXform);
+    meshChunk->addInstance(meshId, instanceXform, instanceId);
     meshChunks.push_back(meshChunk);
     return;
   }
 
-  rootChunk->addInstance(meshId, instanceXform);
+  rootChunk->addInstance(meshId, instanceXform, instanceId);
 }
 
 namespace {
@@ -222,7 +222,7 @@ void InstancePartitioner::subdivideChunk(
                                                                      glm::mat4(1));
     for (size_t instanceIndex = 0; instanceIndex < chunk->getInstances().size(); instanceIndex++) {
       const auto &instance = chunk->getInstances()[instanceIndex];
-      chunkData->addInstance(instance.meshId, instance.xform);
+      chunkData->addInstance(instance.meshId, instance.xform, instance.instanceId);
     }
     callback(chunkData);
     this->chunkCount++;
@@ -269,8 +269,19 @@ void InstancePartitioner::subdivideChunk(
     // rootChunk->getInstanceCount(), cudaMemAdviseSetPreferredLocation, cudaCpuDeviceId));
     for (const auto &instanceList : rootChunk->getInstanceXforms()) {
       const auto meshId = instanceList.first;
-      for (const auto &xform : instanceList.second) {
-        instances.push_back_maybe(Instance{meshId, xform});
+      auto const& xforms = instanceList.second;
+      if (rootChunk->getInstanceIds().find(meshId) == rootChunk->getInstanceIds().end()) {
+        std::cerr << "No key for mesh ID " << meshId << " in root chunk instance IDs\n";
+        std::exit(1);
+      }
+      auto const& instanceIds = rootChunk->getInstanceIds().find(meshId)->second;
+      if (instanceIds.size() != xforms.size()) {
+        std::cerr << "Root chunk xforms and instance IDs for mesh ID " << meshId << " have differing sizes: " << xforms.size() << "xforms, " << instanceIds.size() << "instance IDs\n";
+        std::exit(1);
+      }
+      for (size_t i = 0; i < xforms.size(); i++) {
+
+        instances.push_back_maybe(Instance{meshId, instanceIds[i], xforms[i]});
       }
     }
     prefetchInstancesAsync(instances, stream);

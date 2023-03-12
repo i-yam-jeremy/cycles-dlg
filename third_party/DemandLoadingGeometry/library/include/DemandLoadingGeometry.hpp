@@ -101,7 +101,7 @@ class GeometryDemandLoader {
   // Scene Building API
   // void reserveSpaceForNewInstances(size_t instanceCount);
   MeshHandle addMesh(const Mesh &mesh, const std::optional<OptixAabb> &aabb = {});
-  void addInstance(MeshHandle meshHandle, const AffineXform &xform);
+  void addInstance(MeshHandle meshHandle, const AffineXform &xform, uint32_t instanceId);
   OptixTraversableHandle updateScene(unsigned int baseDlgSbtOffset);
 
   std::unique_ptr<SBTBuffer> getInternalApiHitgroupSbtEntries(size_t sizeOfUserSbtStruct,

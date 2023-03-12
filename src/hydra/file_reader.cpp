@@ -360,7 +360,7 @@ void processPointInstancer(Scene *scene,
   }
 
   std::vector<std::pair<glm::mat4, UsdGeomPointInstancer>> _ignoredPointInstancers;
-  auto const instanceCount = positions.size();//std::min(positions.size(), size_t(1000000));
+  auto const instanceCount = positions.size();//std::min(positions.size(), size_t(1000000)); // Cap off instances so partial scene can be rendered if running on base cycles without DLG
   for (size_t i = 0; i < instanceCount; i++) {
     auto const &p = positions[i];
     auto const &s = scales[i];

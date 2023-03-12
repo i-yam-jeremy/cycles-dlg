@@ -148,6 +148,7 @@ ccl_device_inline void shader_setup_from_sample(KernelGlobals kg,
                                                 bool object_space,
                                                 int lamp)
 {
+   // TODO(jerchtold) is this function ever called in OptiX (maybe just add a printf to check?), if it is called this is potentially another place normals are used
   /* vectors */
   sd->P = P;
   sd->N = Ng;

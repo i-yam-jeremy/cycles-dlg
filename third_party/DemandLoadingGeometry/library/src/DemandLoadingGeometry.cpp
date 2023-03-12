@@ -55,9 +55,9 @@ MeshHandle GeometryDemandLoader::addMesh(const Mesh &mesh, const std::optional<O
   return m_impl->addMesh(mesh, aabb);
 }
 
-void GeometryDemandLoader::addInstance(MeshHandle meshHandle, const AffineXform &xform)
+void GeometryDemandLoader::addInstance(MeshHandle meshHandle, const AffineXform &xform, uint32_t instanceId)
 {
-  m_impl->addInstance(meshHandle, xform);
+  m_impl->addInstance(meshHandle, xform, instanceId);
 }
 
 OptixTraversableHandle GeometryDemandLoader::updateScene(unsigned int baseDlgSbtOffset)

@@ -3,6 +3,7 @@
 namespace {
 __global__ void populate_optix_instances(OptixInstance *instances,
                                          const demandLoadingGeometry::AffineXform *xforms,
+                                         const uint32_t *instanceIds,
                                          OptixTraversableHandle asHandle,
                                          int sbtOffset,
                                          int instanceCount)
@@ -14,7 +15,7 @@ __global__ void populate_optix_instances(OptixInstance *instances,
 
   const auto &xform = xforms[i];
   auto &instance = instances[i];
-  instance.instanceId = 0;
+  instance.instanceId = instanceIds[i];
   instance.visibilityMask = 0xFF;
   instance.flags = OPTIX_INSTANCE_FLAG_DISABLE_ANYHIT;
   memcpy(instance.transform, xform.data, sizeof(instance.transform));
@@ -25,6 +26,7 @@ __global__ void populate_optix_instances(OptixInstance *instances,
 
 void populateOptixInstances(OptixInstance *d_out_optixInstances,
                             const demandLoadingGeometry::AffineXform *d_xforms,
+                            const uint32_t *d_instanceIds,
                             OptixTraversableHandle asHandle,
                             int sbtOffset,
                             int instanceCount,
@@ -33,5 +35,5 @@ void populateOptixInstances(OptixInstance *d_out_optixInstances,
   dim3 block(32);
   dim3 grid(1 + ((instanceCount - 1) / block.x));
   populate_optix_instances<<<grid, block, 0, stream>>>(
-      d_out_optixInstances, d_xforms, asHandle, sbtOffset, instanceCount);
+      d_out_optixInstances, d_xforms, d_instanceIds, asHandle, sbtOffset, instanceCount);
 }

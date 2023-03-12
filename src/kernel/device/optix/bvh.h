@@ -128,6 +128,9 @@ extern "C" __global__ void __anyhit__kernel_optix_local_hit()
   const float3 tri_b = kernel_data_fetch(tri_verts, tri_vindex + 1);
   const float3 tri_c = kernel_data_fetch(tri_verts, tri_vindex + 2);
   local_isect->Ng[hit] = normalize(cross(tri_b - tri_a, tri_c - tri_a));
+  // TODO(jberchtold) This is the face normal from optix based on the tri vertex positions.
+  // TODO(jberchtold) remove tri_verts and tri_vindex buffers since they shouldn't be loaded by Cycles (DLG should handle all geo) and enable random vertex access in optix geom flags
+  // TODO(jberchtold) simple WAR for normal buffers (which may not be needed here, is to store normal buffers as unified memory so they will only be paged in when requested, later would be good to switch to DemandLoading lib for finer control and memory caps)
 
   /* Continue tracing (without this the trace call would return after the first hit). */
   optixIgnoreIntersection();

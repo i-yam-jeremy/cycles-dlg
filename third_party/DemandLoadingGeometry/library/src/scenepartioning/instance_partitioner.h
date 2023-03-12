@@ -14,7 +14,7 @@ public:
   InstancePartitioner();
   virtual ~InstancePartitioner() = default;
   void setMeshInfo(int meshId, const OptixAabb& aabb, const size_t memoryUsage);
-  void add(int meshId, const demandLoadingGeometry::AffineXform &instanceXform);
+  void add(int meshId, const demandLoadingGeometry::AffineXform &instanceXform, uint32_t instanceId);
   int writeChunks(std::function<void(const std::shared_ptr<glow::pipeline::render::Chunk>)> callback);
 
 protected:

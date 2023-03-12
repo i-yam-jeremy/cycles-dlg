@@ -13,6 +13,7 @@ struct Chunk {
   struct InstanceList {
     int assetIndex;
     std::vector<AffineXform> instanceXforms;
+    std::vector<uint32_t> instanceIds;
   };
 
   OptixAabb aabb;

@@ -27,9 +27,9 @@ extern "C" __global__ void DEMANDLOADINGGEOMETRY_CHUNK_CH_SHADER_NAME()
   // printf("Func: %s\n", __PRETTY_FUNCTION__);
   // printf("Hello: %d, %d\n", optixGetPayload_8(), optixGetPayload_9());
   // Note: optixGetSbtDataPointer() points to the SBT entry data after the SBT entry header
-  // auto &dlgContext =
-  //     reinterpret_cast<internal::ChunkSBTEntry *>(optixGetSbtDataPointer())->context;
-  // const auto assetIndex = optixGetInstanceId();
+  auto &dlgContext =
+      reinterpret_cast<internal::ChunkSBTEntry *>(optixGetSbtDataPointer())->context;
+  const auto assetIndex = optixGetInstanceId();
 
   // // Store ray index to internal buffer to stall ray eval until the asset has been loaded
   // const auto index = atomicAdd(&(dlgContext.d_assetRayCountBuffer[assetIndex]), 1);
@@ -56,13 +56,6 @@ extern "C" __global__ void DEMANDLOADINGGEOMETRY_CHUNK_CH_SHADER_NAME()
   // the same chunk over and over again
 
   optixSetPayload_5(DLG_CYCLES_PRIM_TYPE);
-  // TODO set prim type to custom DLG type so caller knows to break and early return, but not
-  // terminate path
-
-  // TODO(jberchtold) why isnt it printing.Wrong SBT ?
-  //     Or wrong bboxes geo or BVH setup that is causing chunk boxes to not be hit ?
-  //     Or maybe its somehow traversing the incorrect handle ?
-  //     Idk
 }
 
 }  // namespace demandLoadingGeometry

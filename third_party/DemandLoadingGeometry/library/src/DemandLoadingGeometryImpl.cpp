@@ -98,10 +98,10 @@ MeshHandle GeometryDemandLoaderImpl::addMesh(const Mesh &mesh,
   return MeshHandle(meshIndex);
 }
 
-void GeometryDemandLoaderImpl::addInstance(MeshHandle meshHandle, const AffineXform &xform)
+void GeometryDemandLoaderImpl::addInstance(MeshHandle meshHandle, const AffineXform &xform, uint32_t instanceId)
 {
   std::lock_guard guard(mutex);
-  m_instancePartitioner->add(meshHandle.meshIndex, xform);
+  m_instancePartitioner->add(meshHandle.meshIndex, xform, instanceId);
 }
 
 OptixTraversableHandle GeometryDemandLoaderImpl::updateScene(unsigned int baseDlgSbtOffset)
@@ -150,6 +150,7 @@ void GeometryDemandLoaderImpl::partition()
   m_chunks.clear();
   m_instancePartitioner->writeChunks(
       [this](const std::shared_ptr<glow::pipeline::render::Chunk> chunk) {
+        // TODO(jberchtold) consolidate types so I don't have three separate chunk classes/structs, maybe one PackedChunk and one PartitioningChunk? Or maybe just one chunk type overall with RAII to support CPU-only or unified memory / GPU allocation
         if (chunk != nullptr && !chunk->isEmpty()) {
           Chunk dlgChunk;
           dlgChunk.aabb = chunk->getAabb();
@@ -161,8 +162,12 @@ void GeometryDemandLoaderImpl::partition()
             const auto meshId = entry.first;
             instanceList.assetIndex = meshId;
             instanceList.instanceXforms.reserve(entry.second.size());
-            for (const auto &xform : entry.second) {
+            instanceList.instanceIds.reserve(entry.second.size());
+            auto const& instanceIds = chunk->getInstanceIds().find(meshId)->second;
+            for (size_t j = 0; j < entry.second.size(); j++) {
+              auto const& xform = entry.second[j];
               instanceList.instanceXforms.push_back(AffineXform(xform));
+              instanceList.instanceIds.push_back(instanceIds[j]);
             }
           }
 

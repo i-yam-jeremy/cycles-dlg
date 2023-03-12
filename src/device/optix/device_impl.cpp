@@ -2043,7 +2043,7 @@ void OptiXDevice::build_bvh(BVH *bvh, Progress &progress, bool refit)
           memcpy(xform.data, &ob->get_tfm(), sizeof(xform.data));
         }
         m_geoDemandLoader->addInstance(m_meshHandles[static_cast<Mesh *>(ob->get_geometry())],
-                                       xform);
+                                       xform, ob->get_device_index());
         continue;
       }
 

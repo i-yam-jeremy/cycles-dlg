@@ -7,7 +7,8 @@
 
 namespace glow::pipeline::sceneloader::partition {
 struct Instance {
-  int meshId;
+  int meshId; // TODO(jberchtold) maybe move this onto the instance list itself and store multiple instance lists, one per meshID? so meshId doesn't need to be duplicated across all instances
+  uint32_t instanceId;
   demandLoadingGeometry::AffineXform xform;
 };
 
@@ -63,8 +64,8 @@ public:
 
 private:
   Instance *m_instances;
-  size_t m_size;
   size_t m_capacity;
+  size_t m_size;
 };
 
 class Chunk {
