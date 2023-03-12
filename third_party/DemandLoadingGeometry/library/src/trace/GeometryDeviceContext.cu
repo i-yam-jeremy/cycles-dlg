@@ -32,7 +32,11 @@ extern "C" __global__ void DEMANDLOADINGGEOMETRY_CHUNK_CH_SHADER_NAME()
   const auto assetIndex = optixGetInstanceId();
 
   // // Store ray index to internal buffer to stall ray eval until the asset has been loaded
-  // const auto index = atomicAdd(&(dlgContext.d_assetRayCountBuffer[assetIndex]), 1);
+  // if (assetIndex >= dlgContext->assetCount) {
+  //   printf("instance id out of bounds: %d / %d\n", assetIndex, dlgContext->assetCount);
+  // }
+
+  const auto index = atomicAdd(&(dlgContext->d_assetRayCountBuffer[assetIndex]), 1);
   // const StalledPathState stalledPathState{
   //   .kernelIndex = optixGetPayload_9(),
   //   .pathIndex = optixGetPayload_8()

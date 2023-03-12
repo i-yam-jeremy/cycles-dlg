@@ -16,14 +16,13 @@ GeometryDemandLoaderImpl::GeometryDemandLoaderImpl(
     CUcontext cuContext,
     OptixDeviceContext optixContext)
     : m_cuContext(cuContext),
+      m_deviceContext(std::make_shared<glow::memory::DevicePtr<GeometryDeviceContext>>(
+          sizeof(GeometryDeviceContext), (cudaStream_t)0)),
       m_instancePartitioner(std::move(instancePartitioner)),
       m_options(options),
       m_optixManager(std::make_shared<glow::optix::OptixManager>(
           std::make_shared<glow::optix::OptixConnector>(), optixContext))
 {
-  m_deviceContext.sceneTraversableHandle = NULL_TRAVERSABLE_HANDLE;
-  m_deviceContext.d_assetRayCountBuffer = nullptr;
-  // m_deviceContext.d_stalledRayIndices = nullptr;
 }
 
 GeometryDemandLoaderImpl::~GeometryDemandLoaderImpl()
@@ -98,7 +97,9 @@ MeshHandle GeometryDemandLoaderImpl::addMesh(const Mesh &mesh,
   return MeshHandle(meshIndex);
 }
 
-void GeometryDemandLoaderImpl::addInstance(MeshHandle meshHandle, const AffineXform &xform, uint32_t instanceId)
+void GeometryDemandLoaderImpl::addInstance(MeshHandle meshHandle,
+                                           const AffineXform &xform,
+                                           uint32_t instanceId)
 {
   std::lock_guard guard(mutex);
   m_instancePartitioner->add(meshHandle.meshIndex, xform, instanceId);
@@ -116,14 +117,19 @@ OptixTraversableHandle GeometryDemandLoaderImpl::updateScene(unsigned int baseDl
 
   partition();
   updateAssets();
-  m_deviceContext.sceneTraversableHandle = createTopLevelTraversable(baseDlgSbtOffset);
+  OptixTraversableHandle const sceneTraversableHandle = createTopLevelTraversable(
+      baseDlgSbtOffset);
   updateAssetCache();
 
   m_assetRayCounts = std::make_shared<glow::memory::DevicePtr<internal::RayCount>>(
       sizeof(internal::RayCount) * m_assets.size(), (cudaStream_t)0);
   std::vector<internal::RayCount> assetRayCounts(m_assets.size());
   m_assetRayCounts->write(assetRayCounts.data());  // Write zeroes to initialize ray counts
-  m_deviceContext.d_assetRayCountBuffer = m_assetRayCounts->rawPtr();
+
+  GeometryDeviceContext deviceContext{};
+  deviceContext.d_assetRayCountBuffer = m_assetRayCounts->rawPtr();
+  deviceContext.assetCount = m_assets.size();
+  m_deviceContext->write(&deviceContext);
 
   // for (size_t i = 0; i < m_assets.size(); i++) {
   //   demandLoadingGeometry::RayIndex *d_rayQueue;
@@ -142,7 +148,7 @@ OptixTraversableHandle GeometryDemandLoaderImpl::updateScene(unsigned int baseDl
 
   CUDA_CHECK(cudaDeviceSynchronize());
 
-  return m_deviceContext.sceneTraversableHandle;
+  return sceneTraversableHandle;
 }
 
 void GeometryDemandLoaderImpl::partition()
@@ -150,7 +156,9 @@ void GeometryDemandLoaderImpl::partition()
   m_chunks.clear();
   m_instancePartitioner->writeChunks(
       [this](const std::shared_ptr<glow::pipeline::render::Chunk> chunk) {
-        // TODO(jberchtold) consolidate types so I don't have three separate chunk classes/structs, maybe one PackedChunk and one PartitioningChunk? Or maybe just one chunk type overall with RAII to support CPU-only or unified memory / GPU allocation
+        // TODO(jberchtold) consolidate types so I don't have three separate chunk classes/structs,
+        // maybe one PackedChunk and one PartitioningChunk? Or maybe just one chunk type overall
+        // with RAII to support CPU-only or unified memory / GPU allocation
         if (chunk != nullptr && !chunk->isEmpty()) {
           Chunk dlgChunk;
           dlgChunk.aabb = chunk->getAabb();
@@ -163,9 +171,9 @@ void GeometryDemandLoaderImpl::partition()
             instanceList.assetIndex = meshId;
             instanceList.instanceXforms.reserve(entry.second.size());
             instanceList.instanceIds.reserve(entry.second.size());
-            auto const& instanceIds = chunk->getInstanceIds().find(meshId)->second;
+            auto const &instanceIds = chunk->getInstanceIds().find(meshId)->second;
             for (size_t j = 0; j < entry.second.size(); j++) {
-              auto const& xform = entry.second[j];
+              auto const &xform = entry.second[j];
               instanceList.instanceXforms.push_back(AffineXform(xform));
               instanceList.instanceIds.push_back(instanceIds[j]);
             }
@@ -203,8 +211,7 @@ std::unique_ptr<SBTBuffer> GeometryDemandLoaderImpl::getInternalApiHitgroupSbtEn
     auto *ptr = reinterpret_cast<SBTRecord<Empty> *>(reinterpret_cast<char *>(sbtBuffer->data) +
                                                      i * sbtEntrySize);
     // Note: packing SBT header (with optix program group) is up to the user of the DLG API
-    ptr->__chunkSbtData.context = m_deviceContext;
-    printf("d_assetRayCountBuffer2: %ld\n", ptr->__chunkSbtData.context.d_assetRayCountBuffer);
+    ptr->__chunkSbtData.context = m_deviceContext->rawPtr();
   }
 
   return std::move(sbtBuffer);
@@ -270,37 +277,37 @@ demandLoadingGeometry::LaunchData GeometryDemandLoaderImpl::preLaunch(
 
   // 5. If any new assets have been loaded, copy ray indices of stalled rays to the user's ray
   // queue
-  demandLoadingGeometry::RayIndex numRayIndicesAddedToUserRayQueue = 0;
-  demandLoadingGeometry::RayIndex numStalledRays = 0;
-  int assetsUsed = 0;
-  auto prevPriority = assetPriorities[0].second;
-  for (size_t assetIndex = 0; assetIndex < m_assetCache->getAssets()->size(); assetIndex++) {
-    const auto rayCount = assetCounts[assetIndex];
-    if (rayCount == 0) {
-      continue;
-    }
+  // demandLoadingGeometry::RayIndex numRayIndicesAddedToUserRayQueue = 0;
+  // demandLoadingGeometry::RayIndex numStalledRays = 0;
+  // int assetsUsed = 0;
+  // auto prevPriority = assetPriorities[0].second;
+  // for (size_t assetIndex = 0; assetIndex < m_assetCache->getAssets()->size(); assetIndex++) {
+  //   const auto rayCount = assetCounts[assetIndex];
+  //   if (rayCount == 0) {
+  //     continue;
+  //   }
 
-    if (m_assetCache->isResident(assetIndex)) {
-      // Copy stalled rays to user's ray queue
-      CUDA_CHECK(cudaMemcpyAsync(d_endOfUserRayQueue,
-                                 m_stalledRayQueues[assetIndex],
-                                 rayCount * sizeof(*d_endOfUserRayQueue),
-                                 cudaMemcpyDeviceToDevice,
-                                 stream));
-      d_endOfUserRayQueue += rayCount;
-      assetCounts[assetIndex] = 0;
-      numRayIndicesAddedToUserRayQueue += rayCount;
-      assetsUsed++;
-    }
-    else {
-      numStalledRays += rayCount;
-    }
-  }
-  m_assetRayCounts->write(assetCounts.data(),
-                          stream);  // Update asset counts for stalled ray queues
+  //   if (m_assetCache->isResident(assetIndex)) {
+  //     // Copy stalled rays to user's ray queue
+  //     CUDA_CHECK(cudaMemcpyAsync(d_endOfUserRayQueue,
+  //                                m_stalledRayQueues[assetIndex],
+  //                                rayCount * sizeof(*d_endOfUserRayQueue),
+  //                                cudaMemcpyDeviceToDevice,
+  //                                stream));
+  //     d_endOfUserRayQueue += rayCount;
+  //     assetCounts[assetIndex] = 0;
+  //     numRayIndicesAddedToUserRayQueue += rayCount;
+  //     assetsUsed++;
+  //   }
+  //   else {
+  //     numStalledRays += rayCount;
+  //   }
+  // }
+  // m_assetRayCounts->write(assetCounts.data(),
+  //                         stream);  // Update asset counts for stalled ray queues
 
-  std::cout << "Assets used: " << assetsUsed
-            << ", Assets in cache: " << m_assetCache->getResidentAssetCount() << std::endl;
+  // std::cout << "Assets used: " << assetsUsed
+  //           << ", Assets in cache: " << m_assetCache->getResidentAssetCount() << std::endl;
 
   // //
   // ##########################################################################################################################
@@ -321,7 +328,8 @@ demandLoadingGeometry::LaunchData GeometryDemandLoaderImpl::preLaunch(
   //   }
   // }); TODO(jberchtold)
 
-  return LaunchData{m_deviceContext, numRayIndicesAddedToUserRayQueue, numStalledRays};
+  // return LaunchData{m_deviceContext, numRayIndicesAddedToUserRayQueue, numStalledRays};
+  return LaunchData{0, 0};
 }
 
 void GeometryDemandLoaderImpl::postLaunch(cudaStream_t stream)

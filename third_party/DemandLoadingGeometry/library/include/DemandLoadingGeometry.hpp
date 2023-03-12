@@ -3,6 +3,7 @@
 #include <MeshHandle.hpp>
 #include <MeshTypes.h>
 #include <affinexform.h>
+#include <cuda.h>
 #include <cuda_runtime.h>
 #include <glm/glm.hpp>
 #include <internal/structs.hpp>
@@ -13,7 +14,6 @@
 #include <string>
 #include <tuple>
 #include <vector>
-#include <cuda.h>
 
 // Temporary (while refactoring is in progress)
 enum class InstancePartitionerType {
@@ -71,7 +71,9 @@ struct Options {
   InstancePartitionerType instancePartitionerType;
 };
 
-GeometryDemandLoader *createDemandLoader(Options &options, CUcontext cuContext, OptixDeviceContext optixContext);
+GeometryDemandLoader *createDemandLoader(Options &options,
+                                         CUcontext cuContext,
+                                         OptixDeviceContext optixContext);
 
 struct SBTBuffer {
   ~SBTBuffer();
@@ -81,7 +83,6 @@ struct SBTBuffer {
 };
 
 struct LaunchData {
-  GeometryDeviceContext context;
   demandLoadingGeometry::RayIndex numNewRaysAddedToUserRayQueue;
   demandLoadingGeometry::RayIndex numStalledRays;
 };
@@ -94,9 +95,9 @@ class GeometryDemandLoader {
   std::optional<OptixProgramGroupDesc> getOptixProgramGroup(
       const OptixPipelineCompileOptions &pipeline_compile_options,
       const OptixModuleCompileOptions &module_compile_options);
-  
+
   // Register path queues to resume stalled rays
-  void registerPathQueues(int** d_pathQueues, int** d_pathQueueSizes);
+  void registerPathQueues(int **d_pathQueues, int **d_pathQueueSizes);
 
   // Scene Building API
   // void reserveSpaceForNewInstances(size_t instanceCount);
@@ -114,7 +115,7 @@ class GeometryDemandLoader {
 
  private:
   friend GeometryDemandLoader *createDemandLoader(Options &options,
-                                                  CUcontext cuContext, 
+                                                  CUcontext cuContext,
                                                   OptixDeviceContext optixContext);
   GeometryDemandLoader(GeometryDemandLoaderImpl *impl);
 

@@ -2,4 +2,5 @@ catch throw
 set breakpoint pending on
 # b pxr/imaging/hd/renderIndex.cpp:125
 #b pxr/usdImaging/usdImaging/delegate.cpp:122
-r --samples 10 --device OPTIX --output image.png "/media/jeremy/DRIVE/home/jeremy/Documents/Kitchen_set/Kitchen_set.usd" --width 4096 --height 2048
+#r --samples 10 --device OPTIX --output image.png "/media/jeremy/DRIVE/home/jeremy/Documents/Kitchen_set/Kitchen_set.usd" --width 4096 --height 2048
+r --samples 10 --device OPTIX --output image.png "/media/jeremy/DRIVE/home/jeremy/Documents/island-usd-v2.0/island/usd/island.usda" --width 1024 --height 512

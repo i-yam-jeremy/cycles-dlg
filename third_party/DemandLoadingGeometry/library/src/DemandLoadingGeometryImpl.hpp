@@ -1,13 +1,13 @@
 #pragma once
 
 #include <DemandLoadingGeometry.hpp>
+#include <cuda.h>
 #include <memory>
 #include <mutex>
 #include <scenepartioning/instance_partitioner.h>
 #include <sharedtypes/chunk.h>
 #include <trace/AssetCache.hpp>
 #include <trace/optixmanager.h>
-#include <cuda.h>
 
 namespace demandLoadingGeometry {
 
@@ -42,7 +42,7 @@ class GeometryDemandLoaderImpl {
 
  private:
   CUcontext m_cuContext{};
-  GeometryDeviceContext m_deviceContext;
+  std::shared_ptr<glow::memory::DevicePtr<GeometryDeviceContext>> m_deviceContext = nullptr;
   std::unique_ptr<glow::pipeline::sceneloader::partition::InstancePartitioner>
       m_instancePartitioner = nullptr;
   Options m_options;

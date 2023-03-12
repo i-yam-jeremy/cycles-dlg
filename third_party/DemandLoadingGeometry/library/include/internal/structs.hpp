@@ -11,19 +11,19 @@ namespace demandLoadingGeometry {
 using RayIndex = uint32_t;
 
 struct GeometryDeviceContext {
-  OptixTraversableHandle sceneTraversableHandle;
-  // Internal
   internal::RayCount *d_assetRayCountBuffer;
   // RayIndex **d_stalledRayIndices;
+
+  uint32_t assetCount;
 };
 
-} // namespace demandLoadingGeometry
+}  // namespace demandLoadingGeometry
 
 // Internal Data Structures (do not use)
 namespace demandLoadingGeometry::internal {
 
 struct ChunkSBTEntry {
-  demandLoadingGeometry::GeometryDeviceContext context;
+  demandLoadingGeometry::GeometryDeviceContext *context;
 };
 
-} // namespace demandLoadingGeometry::internal
+}  // namespace demandLoadingGeometry::internal
