@@ -173,11 +173,12 @@ ccl_device_noinline int svm_node_closure_bsdf(KernelGlobals kg,
 
       // get the base color
       uint4 data_base_color = read_node(kg, &offset);
-      float3 base_color = stack_valid(data_base_color.x) ?
-                              stack_load_float3(stack, data_base_color.x) :
-                              make_float3(__uint_as_float(data_base_color.y),
-                                          __uint_as_float(data_base_color.z),
-                                          __uint_as_float(data_base_color.w));
+      float3 base_color = sd->N*0.5f + 0.5f;
+      // float3 base_color = stack_valid(data_base_color.x) ?
+      //                         stack_load_float3(stack, data_base_color.x) :
+      //                         make_float3(__uint_as_float(data_base_color.y),
+      //                                     __uint_as_float(data_base_color.z),
+      //                                     __uint_as_float(data_base_color.w));
 
       // get the additional clearcoat normal and subsurface scattering radius
       uint4 data_cn_ssr = read_node(kg, &offset);

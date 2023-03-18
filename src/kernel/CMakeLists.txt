@@ -3,6 +3,9 @@
 
 remove_extra_strict_flags()
 
+find_package(glm CONFIG REQUIRED)
+link_libraries(glm::glm)
+
 set(INC
   ..
 )

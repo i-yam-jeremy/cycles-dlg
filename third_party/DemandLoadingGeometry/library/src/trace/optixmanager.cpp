@@ -119,8 +119,15 @@ result<std::shared_ptr<glow::optix::ASData>, Err> glow::optix::OptixManager::bui
   std::vector<std::vector<CUdeviceptr>> pointBufferPointers;
   std::vector<std::shared_ptr<glow::memory::DevicePtr<float3>>> pointsBuffers;
   std::vector<std::shared_ptr<glow::memory::DevicePtr<uint3>>> indexBuffers;
-  uint32_t triangleInputFlags[] = {OPTIX_GEOMETRY_FLAG_REQUIRE_SINGLE_ANYHIT_CALL};
-  size_t primCount = 0;
+  uint32_t triangleInputFlags[] = {OPTIX_GEOMETRY_FLAG_DISABLE_TRIANGLE_FACE_CULLING | OPTIX_GEOMETRY_FLAG_REQUIRE_SINGLE_ANYHIT_CALL};
+
+  if (mesh.primitiveIndexOffset >= 1L << 32) {
+    std::cout << "Mesh primitive offset exceeds uint32_t: " << mesh.primitiveIndexOffset
+              << std::endl;
+    std::exit(1);
+  }
+
+  size_t primOffset = mesh.primitiveIndexOffset;
   size_t i = 0;
   for (const auto &buildInput : mesh.buildInputs) {
     auto &input = inputs[i];
@@ -148,11 +155,11 @@ result<std::shared_ptr<glow::optix::ASData>, Err> glow::optix::OptixManager::bui
 
     input.triangleArray.flags = triangleInputFlags;
     input.triangleArray.numSbtRecords = 1;
-    input.triangleArray.primitiveIndexOffset = primCount;
+    input.triangleArray.primitiveIndexOffset = primOffset;
 
     pointsBuffers.push_back(pointsBuffer);
     indexBuffers.push_back(indicesBuffer);
-    primCount += buildInput->indices.size();
+    primOffset += buildInput->indices.size();
     i++;
   }
 

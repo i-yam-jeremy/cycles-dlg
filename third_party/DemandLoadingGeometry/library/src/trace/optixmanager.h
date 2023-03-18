@@ -93,7 +93,8 @@ class OptixManager {
   std::mutex mutex;
   std::vector<char> log;  // For error reporting from OptiX creation functions
   OptixAccelBuildOptions accel_options = {OPTIX_BUILD_FLAG_ALLOW_COMPACTION |
-                                              OPTIX_BUILD_FLAG_PREFER_FAST_BUILD,
+                                              OPTIX_BUILD_FLAG_PREFER_FAST_BUILD |
+                                              OPTIX_BUILD_FLAG_ALLOW_RANDOM_VERTEX_ACCESS,
                                           OPTIX_BUILD_OPERATION_BUILD,
                                           OptixMotionOptions{1, OPTIX_MOTION_FLAG_NONE, 0.f, 0.f}};
 };

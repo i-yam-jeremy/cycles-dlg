@@ -9,15 +9,21 @@
 namespace demandLoadingGeometry {
 
 struct TriangleBuildInput {
-  TriangleBuildInput() {}
+  TriangleBuildInput()
+  {
+  }
 
   std::vector<float3> positions;
   std::vector<uint3> indices;
 };
 
 struct Mesh {
-  Mesh() {}
+  Mesh()
+  {
+  }
+
+  uint64_t primitiveIndexOffset = 0;
   std::vector<std::shared_ptr<TriangleBuildInput>> buildInputs;
 };
 
-} // namespace demandLoadingGeometry
+}  // namespace demandLoadingGeometry

@@ -7,6 +7,10 @@
 
 #include <fstream>
 
+#include <thread>
+#include <chrono>
+using namespace std::chrono_literals;
+
 namespace demandLoadingGeometry {
 
 GeometryDemandLoaderImpl::GeometryDemandLoaderImpl(
@@ -144,6 +148,15 @@ OptixTraversableHandle GeometryDemandLoaderImpl::updateScene(unsigned int baseDl
   //                       m_stalledRayQueues.size() * sizeof(m_stalledRayQueues[0]),
   //                       cudaMemcpyHostToDevice));
 
+  // for (int i = 0; i < m_assets.size(); i++) {
+  //   std::vector<std::pair<int, double>> assetPriorities;
+  //   assetPriorities.push_back({i, 0.0f});
+  //   m_assetCache->queueAsset(0.0f, assetPriorities);
+  //   while (!m_assetCache->isResident(i)) {
+  //     std::this_thread::sleep_for(50ms);
+  //   }
+  // }
+
   CUDA_CHECK(cudaStreamSynchronize((cudaStream_t)0));
 
   CUDA_CHECK(cudaDeviceSynchronize());
@@ -204,7 +217,6 @@ std::unique_ptr<SBTBuffer> GeometryDemandLoaderImpl::getInternalApiHitgroupSbtEn
                             std::max(sizeOfUserSbtStruct,
                                      sizeof(SBTRecord<Empty>::__chunkSbtData));
   sbtBuffer->sizeInBytes = sbtEntrySize * sbtBuffer->numElements;
-  std::cout << "sbtBuffer->sizeInBytes: " << sbtBuffer->sizeInBytes << std::endl;
   sbtBuffer->data = new char[sbtBuffer->sizeInBytes];
 
   for (size_t i = 0; i < sbtBuffer->numElements; i++) {

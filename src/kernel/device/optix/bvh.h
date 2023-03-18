@@ -11,6 +11,8 @@
 #define OPTIX_DEFINE_ABI_VERSION_ONLY
 #include <optix_function_table.h>
 
+#include <glm/glm.hpp>
+
 CCL_NAMESPACE_BEGIN
 
 /* Utilities. */
@@ -123,14 +125,36 @@ extern "C" __global__ void __anyhit__kernel_optix_local_hit()
   isect->v = barycentrics.y;
 
   /* Record geometric normal. */
+  // float3 data[3];
+  // optixGetTriangleVertexData(
+  //     optixGetGASTraversableHandle(), prim, optixGetSbtGASIndex(), optixGetRayTime(), data);
+
+  // glm::mat4 M(1);
+  // optixGetObjectToWorldTransformMatrix(&M[0][0]);
+  // M = glm::transpose(M);
+  // for (float3 &p : data) {
+  //   glm::vec4 P(p.x, p.y, p.z, 1);
+  //   P = M * P;
+  //   p = {P.x, P.y, P.z};
+  // }
+
+  // // const uint tri_vindex = kernel_data_fetch(tri_vindex, prim).w;
+  // const float3 tri_a = data[0];  // kernel_data_fetch(tri_verts, tri_vindex + 0);
+  // const float3 tri_b = data[1];  // kernel_data_fetch(tri_verts, tri_vindex + 1);
+  // const float3 tri_c = data[2];  // kernel_data_fetch(tri_verts, tri_vindex + 2);
+
   const uint tri_vindex = kernel_data_fetch(tri_vindex, prim).w;
   const float3 tri_a = kernel_data_fetch(tri_verts, tri_vindex + 0);
   const float3 tri_b = kernel_data_fetch(tri_verts, tri_vindex + 1);
   const float3 tri_c = kernel_data_fetch(tri_verts, tri_vindex + 2);
+
   local_isect->Ng[hit] = normalize(cross(tri_b - tri_a, tri_c - tri_a));
   // TODO(jberchtold) This is the face normal from optix based on the tri vertex positions.
-  // TODO(jberchtold) remove tri_verts and tri_vindex buffers since they shouldn't be loaded by Cycles (DLG should handle all geo) and enable random vertex access in optix geom flags
-  // TODO(jberchtold) simple WAR for normal buffers (which may not be needed here, is to store normal buffers as unified memory so they will only be paged in when requested, later would be good to switch to DemandLoading lib for finer control and memory caps)
+  // TODO(jberchtold) remove tri_verts and tri_vindex buffers since they shouldn't be loaded by
+  // Cycles (DLG should handle all geo) and enable random vertex access in optix geom flags
+  // TODO(jberchtold) simple WAR for normal buffers (which may not be needed here, is to store
+  // normal buffers as unified memory so they will only be paged in when requested, later would be
+  // good to switch to DemandLoading lib for finer control and memory caps)
 
   /* Continue tracing (without this the trace call would return after the first hit). */
   optixIgnoreIntersection();
@@ -484,7 +508,9 @@ ccl_device_intersect bool scene_intersect(KernelGlobals kg,
   uint p8 = state;
   uint p9 = current_kernel;
 
-  // TODO(jberchtold) add call before starting render of m_geoDemandLoader->registerPathQueues(int** path_queues, int** path_queue_sizes); which has params that are two arrays, indexed by DeviceKernel enum
+  // TODO(jberchtold) add call before starting render of
+  // m_geoDemandLoader->registerPathQueues(int** path_queues, int** path_queue_sizes); which has
+  // params that are two arrays, indexed by DeviceKernel enum
 
   uint ray_mask = visibility & 0xFF;
   uint ray_flags = OPTIX_RAY_FLAG_ENFORCE_ANYHIT;
@@ -590,7 +616,7 @@ ccl_device_intersect bool scene_intersect_shadow_all(KernelGlobals kg,
                                                      ccl_private uint *num_recorded_hits,
                                                      ccl_private float *throughput,
                                                      // For DLG ray stalling
-                                                      DeviceKernel current_kernel)
+                                                     DeviceKernel current_kernel)
 {
   uint p0 = state;
   uint p1 = __float_as_uint(1.0f); /* Throughput. */
@@ -644,8 +670,8 @@ ccl_device_intersect bool scene_intersect_volume(KernelGlobals kg,
                                                  ccl_private Intersection *isect,
                                                  const uint visibility,
                                                  // For DLG ray stalling
-                                                IntegratorState state,
-                                                DeviceKernel current_kernel)
+                                                 IntegratorState state,
+                                                 DeviceKernel current_kernel)
 {
   uint p0 = 0;
   uint p1 = 0;

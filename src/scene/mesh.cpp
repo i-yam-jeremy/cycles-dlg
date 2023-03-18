@@ -730,7 +730,7 @@ void Mesh::pack_normals(packed_float3 *vnormal)
     if (do_transform)
       vNi = safe_normalize(transform_direction(&ntfm, vNi));
 
-    vnormal[i] = make_float3(vNi.x, vNi.y, vNi.z);
+    vnormal[i] = make_float3(-vNi.x, -vNi.y, -vNi.z);
   }
 }
 

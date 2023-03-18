@@ -1087,6 +1087,12 @@ void GeometryManager::device_update_mesh(Device *,
     /* normals */
     progress.set_status("Updating Mesh", "Computing normals");
 
+    // TODO(jberchtold) here is where cycles updates/creates attribute buffers
+
+    std::cout << "Unique triangles: " << tri_size << std::endl;
+    std::cout << "Unique vertices: " << vert_size << std::endl;
+    std::cout << "Unique meshes: " << scene->geometry.size() << std::endl;
+
     packed_float3 *tri_verts = dscene->tri_verts.alloc(tri_size * 3);
     uint *tri_shader = dscene->tri_shader.alloc(tri_size);
     packed_float3 *vnormal = dscene->tri_vnormal.alloc(vert_size);

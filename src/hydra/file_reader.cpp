@@ -19,8 +19,8 @@
 #include "app/cycles_xml.h"
 
 #include <glm/glm.hpp>
-#include <glm/gtx/transform.hpp>
 #include <glm/gtx/quaternion.hpp>
+#include <glm/gtx/transform.hpp>
 
 #include <pxr/base/plug/registry.h>
 #include <pxr/imaging/hd/dirtyList.h>
@@ -86,7 +86,7 @@ Shader *createMeshShader(Scene *scene, UsdGeomMesh const &usdMesh)
   std::string xmlData = R"(<cycles>
     <shader name="shader)" +
                         std::to_string(scene->shaders.size()) + R"(">
-      <glossy_bsdf name="floor_closure" distribution="beckmann" roughness="0.8" color=")" +
+      <principled_bsdf name="floor_closure" roughness="0.8" emission_strength="0.1" emission=")" +
                         std::to_string(displayColor[0]) + " " + std::to_string(displayColor[1]) +
                         " " + std::to_string(displayColor[2]) + R"("/>
       <connect from="floor_closure bsdf" to="output surface" />
@@ -94,19 +94,19 @@ Shader *createMeshShader(Scene *scene, UsdGeomMesh const &usdMesh)
    </cycles>
   )";
 
-  if (usdMesh.GetPath().GetString().find("ocean_geo") != std::string::npos) {
-    displayColor = pxr::GfVec3f(0.6, 0.6, 0.8);
-    xmlData = R"(<cycles>
-      <shader name="shader)" +
-              std::to_string(scene->shaders.size()) + R"(">
-        <glass_bsdf name="floor_closure" distribution="beckmann" IOR="1.33" roughness="0.1" color=")" +
-              std::to_string(displayColor[0]) + " " + std::to_string(displayColor[1]) + " " +
-              std::to_string(displayColor[2]) + R"("/>
-        <connect from="floor_closure bsdf" to="output surface" />
-      </shader>
-    </cycles>
-    )";
-  }
+  // if (usdMesh.GetPath().GetString().find("ocean_geo") != std::string::npos) {
+  //   displayColor = pxr::GfVec3f(0.6, 0.6, 0.8);
+  //   xmlData = R"(<cycles>
+  //     <shader name="shader)" +
+  //             std::to_string(scene->shaders.size()) + R"(">
+  //       <glass_bsdf name="floor_closure" distribution="beckmann" IOR="1.33" roughness="0.1" color=")" +
+  //             std::to_string(displayColor[0]) + " " + std::to_string(displayColor[1]) + " " +
+  //             std::to_string(displayColor[2]) + R"("/>
+  //       <connect from="floor_closure bsdf" to="output surface" />
+  //     </shader>
+  //   </cycles>
+  //   )";
+  // }
 
   xmlReadFromString(scene, xmlData);
   return scene->shaders.back();
@@ -151,7 +151,7 @@ void readMesh(ccl::Scene *scene,
 
   /* read state */
   int shader = 0;
-  bool smooth = true;
+  bool smooth = false;
 
   /* read vertices and polygons */
   pxr::VtArray<pxr::GfVec3f> P;
@@ -198,6 +198,9 @@ void readMesh(ccl::Scene *scene,
 
     index_offset += nverts[i];
   }
+
+  mesh->add_face_normals();
+  mesh->add_vertex_normals();
 
   // if (xml_read_float_array(UV, node, "UV")) {
   //   ustring name = ustring("UVMap");
@@ -331,8 +334,8 @@ void processPointInstancer(Scene *scene,
                            std::pair<glm::mat4, UsdGeomPointInstancer> const &instancerPair,
                            std::unordered_map<std::string, Mesh *> &meshes)
 {
-  auto const& baseXform = instancerPair.first;
-  auto const& instancer = instancerPair.second;
+  auto const &baseXform = instancerPair.first;
+  auto const &instancer = instancerPair.second;
   pxr::VtArray<pxr::GfVec3f> positions;
   pxr::VtArray<pxr::GfVec3f> scales;
   pxr::VtArray<pxr::GfQuath> orientations;
@@ -360,14 +363,21 @@ void processPointInstancer(Scene *scene,
   }
 
   std::vector<std::pair<glm::mat4, UsdGeomPointInstancer>> _ignoredPointInstancers;
-  auto const instanceCount = positions.size();//std::min(positions.size(), size_t(1000000)); // Cap off instances so partial scene can be rendered if running on base cycles without DLG
+  // auto const instanceCount = positions.size();
+  auto const instanceCount = std::min(
+      positions.size(),
+      size_t(0));  // Cap off instances so
+                   // partial scene can be rendered if running on base cycles without DLG
   for (size_t i = 0; i < instanceCount; i++) {
     auto const &p = positions[i];
     auto const &s = scales[i];
     auto const &orientation = orientations[i];
 
     auto const S = glm::scale(glm::mat4(1), glm::vec3(s[0], s[1], s[2]));
-    auto const R = glm::mat4(glm::quat(orientation.GetReal(), orientation.GetImaginary()[0], orientation.GetImaginary()[1], orientation.GetImaginary()[2]));
+    auto const R = glm::mat4(glm::quat(orientation.GetReal(),
+                                       orientation.GetImaginary()[0],
+                                       orientation.GetImaginary()[1],
+                                       orientation.GetImaginary()[2]));
     auto const T = glm::translate(glm::mat4(1), glm::vec3(p[0], p[1], p[2]));
 
     auto protoPrim = protoPrims[protoIndices[i]];
@@ -378,13 +388,12 @@ void processPointInstancer(Scene *scene,
   }
 }
 
-void processPointInstancers(Scene *scene,
-                            UsdStage const &stage,
-                            std::vector<std::pair<glm::mat4, UsdGeomPointInstancer>> const &pointInstancers,
-                            std::unordered_map<std::string, Mesh *> &meshes)
+void processPointInstancers(
+    Scene *scene,
+    UsdStage const &stage,
+    std::vector<std::pair<glm::mat4, UsdGeomPointInstancer>> const &pointInstancers,
+    std::unordered_map<std::string, Mesh *> &meshes)
 {
-  // TODO(jberchtold) need to store xform when saving point instancers so they keep their original
-  // transform
   for (auto &pointInstancer : pointInstancers) {
     processPointInstancer(scene, stage, pointInstancer, meshes);
   }

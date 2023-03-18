@@ -858,9 +858,9 @@ typedef struct ccl_align(16) ShaderData
   /* position */
   float3 P;
   /* smooth normal for shading */
-  float3 N;
+  float3 N;  // TODO(jberchtold) this is the shading normal
   /* true geometric normal */
-  float3 Ng; // TODO(jberchtold) this is the shading normal
+  float3 Ng;
   /* view/incoming direction */
   float3 I;
   /* shader id */

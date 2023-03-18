@@ -62,7 +62,7 @@ enum { PIP_SHADE_RAYTRACE, PIP_SHADE_MNEE, PIP_INTERSECT, NUM_PIPELINES };
 struct Empty {};
 using SbtRecord = demandLoadingGeometry::SBTRecord<Empty>;
 
-constexpr bool useDLG = true;
+constexpr bool useDLG = false;
 class OptiXDevice : public CUDADevice {
  public:
   std::shared_ptr<demandLoadingGeometry::GeometryDemandLoader> m_geoDemandLoader = nullptr;

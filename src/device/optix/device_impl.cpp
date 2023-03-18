@@ -285,7 +285,7 @@ OptiXDevice::OptiXDevice(const DeviceInfo &info, Stats &stats, Profiler &profile
   // #  endif
   // if (DebugFlags().optix.use_debug) {
   VLOG_INFO << "Using OptiX debug mode.";
-  options.validationMode = OPTIX_DEVICE_CONTEXT_VALIDATION_MODE_ALL;
+  // options.validationMode = OPTIX_DEVICE_CONTEXT_VALIDATION_MODE_ALL;
   // }
   optix_assert(optixDeviceContextCreate(cuContext, &options, &context));
 #  ifdef WITH_CYCLES_LOGGING
@@ -1622,10 +1622,18 @@ void OptiXDevice::addDLGMesh(Mesh *mesh)
 
   demandLoadingGeometry::Mesh dlgMesh;
   dlgMesh.buildInputs.push_back(triBuildInput);
+  dlgMesh.primitiveIndexOffset = mesh->prim_offset;
+
+  if (dlgMesh.primitiveIndexOffset + (mesh->get_triangles().size() / 3) >= 1L << 25) {
+    std::cout << "Prim index offset too large: " << dlgMesh.primitiveIndexOffset << " + "
+              << (mesh->get_triangles().size() / 3) << "\n";
+    std::exit(1);
+  }
 
   OptixAabb aabb = convertBoundBoxToOptixAabb(mesh->bounds);
-  std::cout << "AABB: " << aabb.minX << ", " << aabb.minY << ", " << aabb.minZ << ", " << aabb.maxX
-            << ", " << aabb.maxY << ", " << aabb.maxZ << std::endl;
+  // std::cout << "AABB: " << aabb.minX << ", " << aabb.minY << ", " << aabb.minZ << ", " <<
+  // aabb.maxX
+  //           << ", " << aabb.maxY << ", " << aabb.maxZ << std::endl;
   m_meshHandles[mesh] = m_geoDemandLoader->addMesh(dlgMesh, aabb);
   // TODO(jberchtold) mesh should have this flag
   // OPTIX_GEOMETRY_FLAG_REQUIRE_SINGLE_ANYHIT_CALL, but idk if it should because DLG should
@@ -1894,7 +1902,8 @@ void OptiXDevice::build_bvh(BVH *bvh, Progress &progress, bool refit)
 
       if (useDLG) {
         addDLGMesh(mesh);
-        // TODO(jberchtold) idk if this does anything
+        // TODO(jberchtold) idk if setting traversable handle to zero and allocing a 1 byte buffer
+        // does anything
         bvh_optix->as_data->alloc_to_device(1);
         bvh_optix->traversable_handle = 0;
       }
@@ -2042,8 +2051,8 @@ void OptiXDevice::build_bvh(BVH *bvh, Progress &progress, bool refit)
           /* Set transform matrix. */
           memcpy(xform.data, &ob->get_tfm(), sizeof(xform.data));
         }
-        m_geoDemandLoader->addInstance(m_meshHandles[static_cast<Mesh *>(ob->get_geometry())],
-                                       xform, ob->get_device_index());
+        m_geoDemandLoader->addInstance(
+            m_meshHandles[static_cast<Mesh *>(ob->get_geometry())], xform, ob->get_device_index());
         continue;
       }
 
@@ -2203,57 +2212,57 @@ void OptiXDevice::build_bvh(BVH *bvh, Progress &progress, bool refit)
                                                   position of the DLG hitgroup SBT entry
                                                   relative to the base PG_HITD, which has SBT
                                                   offset 0*/);
-      bvh_optix->traversable_handle = dlg_handle;
-      tlas_handle = dlg_handle;
+      // bvh_optix->traversable_handle = dlg_handle;
+      // tlas_handle = dlg_handle;
 
-      // {
-      //   if (topLevelCyclesPlusDLGBVH == nullptr) {
-      //     BVHParams params{};
-      //     params.bvh_layout = BVH_LAYOUT_OPTIX;
-      //     topLevelCyclesPlusDLGBVH = static_cast<BVHOptiX *>(
-      //         BVH::create(params, {}, {}, bvh_optix->device));
-      //   }
-      //   // Make another top-top-level IAS with two instances.
-      //   //     * One instance for tlas_handle (all non-DLG compatible objects, curves, hair,
-      //   // volumes, etc.)
-      //   //     * One instance for DLG handle (all DLG-managed objects)
-      //   // This is going to be inefficient because of more levels of instances and overlapping
-      //   // instances, but should be good enough for a first pass implementation.
-      //   // In the future, DLG will support curves, hair, etc. and may even support volumes
-      //   // some-day.
-      //   device_vector<OptixInstance> instances(this, "optix instances", MEM_READ_ONLY);
-      //   instances.alloc(2);
+      {
+        if (topLevelCyclesPlusDLGBVH == nullptr) {
+          BVHParams params{};
+          params.bvh_layout = BVH_LAYOUT_OPTIX;
+          topLevelCyclesPlusDLGBVH = static_cast<BVHOptiX *>(
+              BVH::create(params, {}, {}, bvh_optix->device));
+        }
+        // Make another top-top-level IAS with two instances.
+        //     * One instance for tlas_handle (all non-DLG compatible objects, curves, hair,
+        // volumes, etc.)
+        //     * One instance for DLG handle (all DLG-managed objects)
+        // This is going to be inefficient because of more levels of instances and overlapping
+        // instances, but should be good enough for a first pass implementation.
+        // In the future, DLG will support curves, hair, etc. and may even support volumes
+        // some-day.
+        device_vector<OptixInstance> instances(this, "optix instances", MEM_READ_ONLY);
+        instances.alloc(2);
 
-      //   const auto createInstance = [](const OptixTraversableHandle asHandle) {
-      //     OptixInstance instance;
-      //     instance.visibilityMask = 0xFF;
-      //     instance.flags = OPTIX_INSTANCE_FLAG_NONE;
-      //     instance.traversableHandle = asHandle;
-      //     instance.transform[0] = 1.0f;
-      //     instance.transform[5] = 1.0f;
-      //     instance.transform[10] = 1.0f;
-      //     return instance;
-      //   };
+        const auto createInstance = [](const OptixTraversableHandle asHandle) {
+          OptixInstance instance;
+          instance.visibilityMask = 0xFF;
+          instance.flags = OPTIX_INSTANCE_FLAG_DISABLE_ANYHIT;
+          instance.traversableHandle = asHandle;
+          instance.transform[0] = 1.0f;
+          instance.transform[5] = 1.0f;
+          instance.transform[10] = 1.0f;
+          return instance;
+        };
 
-      //   OptixInstance cyclesSceneInstance = createInstance(tlas_handle);
-      //   OptixInstance dlgSceneInstance = createInstance(dlg_handle);
-      //   instances[0] = cyclesSceneInstance;
-      //   instances[1] = dlgSceneInstance;
+        OptixInstance cyclesSceneInstance = createInstance(tlas_handle);
+        OptixInstance dlgSceneInstance = createInstance(dlg_handle);
+        instances[0] = cyclesSceneInstance;
+        instances[1] = dlgSceneInstance;
 
-      //   instances.copy_to_device();
+        instances.copy_to_device();
 
-      //   OptixBuildInput build_input = {};
-      //   build_input.type = OPTIX_BUILD_INPUT_TYPE_INSTANCES;
-      //   build_input.instanceArray.instances = instances.device_pointer;
-      //   build_input.instanceArray.numInstances = instances.size();
+        OptixBuildInput build_input = {};
+        build_input.type = OPTIX_BUILD_INPUT_TYPE_INSTANCES;
+        build_input.instanceArray.instances = instances.device_pointer;
+        build_input.instanceArray.numInstances = instances.size();
 
-      //   if (!build_optix_bvh(
-      //           topLevelCyclesPlusDLGBVH, OPTIX_BUILD_OPERATION_BUILD, build_input, 0)) {
-      //     progress.set_error("Failed to build OptiX acceleration structure");
-      //   }
-      //   tlas_handle = topLevelCyclesPlusDLGBVH->traversable_handle;
-      //   bvh_optix->traversable_handle = tlas_handle;
-      // }
+        if (!build_optix_bvh(
+                topLevelCyclesPlusDLGBVH, OPTIX_BUILD_OPERATION_BUILD, build_input, 0)) {
+          progress.set_error("Failed to build OptiX acceleration structure");
+        }
+        tlas_handle = topLevelCyclesPlusDLGBVH->traversable_handle;
+        bvh_optix->traversable_handle = tlas_handle;
+      }
     }
   }
 }

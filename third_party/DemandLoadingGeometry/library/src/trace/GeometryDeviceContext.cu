@@ -54,7 +54,7 @@ extern "C" __global__ void DEMANDLOADINGGEOMETRY_CHUNK_CH_SHADER_NAME()
   // rays were
   // // // added so the launch is correct?)
 
-  optixSetPayload_0(__float_as_int(max(0.0f, optixGetRayTmax() - EPSILON)));
+  optixSetPayload_0(__float_as_int(max(0.0f, optixGetRayTmax())));
   // Intersection t-value so the user can update their ray/path state's
   // min t-value so for a wavefront approach they don't rely on re-tracing
   // the same chunk over and over again
